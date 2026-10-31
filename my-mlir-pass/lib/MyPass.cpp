@@ -2426,6 +2426,10 @@ namespace toy_shared_tile
 
 }//namespace
 
+namespace toy_mlp_fuxion
+{
+    
+}
 //Register
 void registerMyPass()
 {
