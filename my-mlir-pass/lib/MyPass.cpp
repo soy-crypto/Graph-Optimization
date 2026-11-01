@@ -2429,7 +2429,16 @@ namespace toy_shared_tile
 
 namespace toy_mlp_fusion
 {
-    
+    struct ToyFusionPass : PassWrapper<ToyFusionPass, OperationPass<ModuleOp>>
+    {
+        MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ToyFusionPass);
+        StringRef getArgument() const override
+        {
+            
+        }
+
+        
+    };
 }
 
 //Register
