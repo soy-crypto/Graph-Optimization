@@ -2472,8 +2472,8 @@ namespace toy_mlp_fusion
             }
 
             //rewrite
-            bool success = rewriteOps(gbrOps, rewriter);
-            if(!success)
+            bool isRewritten= rewriteOps(gbrOps, rewriter);
+            if(!isRewritten)
             {
                 return failure();
             }
