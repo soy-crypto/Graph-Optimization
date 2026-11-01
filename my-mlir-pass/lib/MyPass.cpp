@@ -33,7 +33,6 @@
 #include "mlir/Transforms/WalkPatternRewriteDriver.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 
-
 using namespace mlir;
 
 //name space 
@@ -2429,7 +2428,7 @@ namespace toy_shared_tile
 namespace toy_mlp_fusion
 {
     //pattern
-    struct ToyFusionPattern : OpRewritePattern<linalg::GenericOp>
+    struct ToyGEMMReluFusionPattern : OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
         LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
@@ -2487,7 +2486,7 @@ void registerMyPass()
     PassRegistration<FusionPass>();
     PassRegistration<TilingPass>();
     PassRegistration<ToyPromoteAccumulatorPass>();
-    
+
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
-    PassRegistration<toy_mlp_fusion::ToyFusionPass>();
+    PassRegistration<toy_mlp_fusion::ToyGEMMReluFusionPattern>();
 }
