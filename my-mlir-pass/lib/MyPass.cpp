@@ -2427,12 +2427,21 @@ namespace toy_shared_tile
 
 namespace toy_mlp_fusion
 {
+    //struct 
+    struct GBROps
+    {
+        linalg::MatmulOp gemmOp;
+        linalg::GenericOp biasOp;
+        linalg::GenericOp reluOp;
+    };
+
     //pattern
-    struct ToyGEMMReluFusionPattern : OpRewritePattern<linalg::GenericOp>
+    struct ToyGEMMBiasReluFusionPattern : OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
         LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
         {
+            //check validity
             return failure();
         }
 
@@ -2488,5 +2497,5 @@ void registerMyPass()
     PassRegistration<ToyPromoteAccumulatorPass>();
 
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
-    PassRegistration<toy_mlp_fusion::ToyGEMMReluFusionPattern>();
+    PassRegistration<toy_mlp_fusion::ToyGEMMBiasReluFusionPattern>();
 }
