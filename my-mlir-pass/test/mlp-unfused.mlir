@@ -24,8 +24,8 @@ module
         outs(%T2 : memref<64x64xf32>) 
         {
             ^bb0(%value: f32, %biasValue: f32, %unused: f32):
-            %sum = arith.addf %value, %biasValue : f32
-            linalg.yield %sum : f32
+                %sum = arith.addf %value, %biasValue : f32
+                linalg.yield %sum : f32
         }
 
         // 3. H[i,j] = ReLU(T2[i,j])
