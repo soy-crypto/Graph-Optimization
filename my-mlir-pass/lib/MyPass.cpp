@@ -2426,7 +2426,6 @@ namespace toy_shared_tile
 
 }//namespace
 
-
 namespace toy_mlp_fusion
 {
     //pattern
@@ -2466,7 +2465,7 @@ namespace toy_mlp_fusion
             {
                 signalPassFailure();
             }
-            
+
         }
 
         
@@ -2488,6 +2487,7 @@ void registerMyPass()
     PassRegistration<FusionPass>();
     PassRegistration<TilingPass>();
     PassRegistration<ToyPromoteAccumulatorPass>();
+    
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
     PassRegistration<toy_mlp_fusion::ToyFusionPass>();
 }
