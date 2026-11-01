@@ -1,9 +1,10 @@
 #matrix = affine_map<(d0, d1) -> (d0, d1)>
 #bias = affine_map<(d0, d1) -> (d1)>
 
-module {
+module 
+{
   func.func @mlp(%X:  memref<64x64xf32>, %W1: memref<64x64xf32>, %B1: memref<64xf32>, %W2: memref<64x64xf32>, %B2: memref<64xf32>, %Y:  memref<64x64xf32>) attributes {llvm.emit_c_interface} 
-    {
+{
 
         %zero = arith.constant 0.0 : f32
 
@@ -33,8 +34,8 @@ module {
         outs(%H : memref<64x64xf32>) 
         {
             ^bb0(%value: f32, %unused: f32):
-            %result = arith.maximumf %value, %zero : f32
-            linalg.yield %result : f32
+                %result = arith.maximumf %value, %zero : f32
+                linalg.yield %result : f32
         }
 
         // 4. T3 = H × W2
@@ -47,8 +48,8 @@ module {
         outs(%Y : memref<64x64xf32>) 
         {
             ^bb0(%value: f32, %biasValue: f32, %unused: f32):
-            %sum = arith.addf %value, %biasValue : f32
-            linalg.yield %sum : f32
+                %sum = arith.addf %value, %biasValue : f32
+                linalg.yield %sum : f32
         }
 
         memref.dealloc %T1 : memref<64x64xf32>
