@@ -2439,10 +2439,47 @@ namespace toy_mlp_fusion
     struct ToyGEMMBiasReluFusionPattern : OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
+        struct GBROps collectOps(linalg::GenericOp op) const
+        {
+            return GBROps{};
+        }
+
+        bool isMatchedOps(GBROps ops) const
+        {
+            return true;
+        }
+
+        bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
+        {
+            return true;
+        }
+
+        
         LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
         {
-            //check validity
-            return failure();
+            //collect ops
+            GBROps gbrOps = collectOps(op);
+            if(!gbrOps.gemmOp || !gbrOps.biasOp || !gbrOps.reluOp)
+            {
+                return failure();
+            }
+
+            //validiate ops
+            bool isValid = isMatchedOps(gbrOps);
+            if(!isValid)
+            {
+                return failure();
+            }
+
+            //rewrite
+            bool success = rewriteOps(gbrOps, rewriter);
+            if(!success)
+            {
+                return failure();
+            }
+
+            //return
+            return success();
         }
 
     };
