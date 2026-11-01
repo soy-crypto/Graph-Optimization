@@ -2462,7 +2462,7 @@ namespace toy_mlp_fusion
             FrozenRewritePatternSet frozen(std::move(patterns));
 
             //apply
-            if(failed(applyOpPatternsGreedily(getOperation(), frozen)))
+            if(failed(applyPatternsGreedily(getOperation(), frozen)))
             {
                 signalPassFailure();
             }
