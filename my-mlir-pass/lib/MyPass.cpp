@@ -2429,12 +2429,43 @@ namespace toy_shared_tile
 
 namespace toy_mlp_fusion
 {
+    //pattern
+    struct ToyFusionPattern : OpRewritePattern<linalg::GenericOp>
+    {
+        using OpRewritePattern::OpRewritePattern;
+        LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
+        {
+            return failure();
+        }
+
+    };
+
+    //pass
     struct ToyFusionPass : PassWrapper<ToyFusionPass, OperationPass<ModuleOp>>
     {
         MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ToyFusionPass);
         StringRef getArgument() const override
         {
-            
+            return "toy-fusion";
+        }
+
+        StringRef getDescription() const override
+        {
+            return "fusion a mlp";
+        }
+
+        void runOnOperation() override
+        {
+            //init
+            RewritePatternSet patterns(&getContext());
+            patterns.add<ToyFusionPass>(&getContext());
+            FrozenRewritePatternSet frozen(std::move(patterns));
+
+            //apply
+            if(failed(applyOpPatternsGreedily(getOperation(), frozen)))
+            {
+                signalPassFailure();
+            }
         }
 
         
@@ -2457,4 +2488,5 @@ void registerMyPass()
     PassRegistration<TilingPass>();
     PassRegistration<ToyPromoteAccumulatorPass>();
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
+    PassRegistration<toy_mlp_fusion::ToyFusionPass>();
 }
