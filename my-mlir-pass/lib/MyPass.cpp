@@ -2533,6 +2533,7 @@ void registerMyPass()
     PassRegistration<TilingPass>();
     PassRegistration<ToyPromoteAccumulatorPass>();
 
+    //gemm, mlp, transformer
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
     PassRegistration<toy_mlp_fusion::ToyGEMMBiasReluFusionPattern>();
 }
