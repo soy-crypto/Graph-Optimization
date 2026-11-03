@@ -3,7 +3,7 @@
 
 module 
 {
-  func.func @mlp(%X:  memref<64x64xf32>, %W1: memref<64x64xf32>, %B1: memref<64xf32>, %W2: memref<64x64xf32>, %B2: memref<64xf32>, %Y:  memref<64x64xf32>) attributes {llvm.emit_c_interface} 
+func.func @mlp(%X:  memref<64x64xf32>, %W1: memref<64x64xf32>, %B1: memref<64xf32>, %W2: memref<64x64xf32>, %B2: memref<64xf32>, %Y:  memref<64x64xf32>) attributes {llvm.emit_c_interface} 
 {
 
         %zero = arith.constant 0.0 : f32

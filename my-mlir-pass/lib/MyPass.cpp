@@ -2507,7 +2507,9 @@ namespace toy_mlp_fusion
             /** biasOp checking */
             
 
-            
+
+
+            /** reluOp checking */
 
             //return
             return flag;
