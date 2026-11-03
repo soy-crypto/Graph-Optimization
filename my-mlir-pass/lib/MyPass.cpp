@@ -2480,12 +2480,40 @@ namespace toy_mlp_fusion
                 return false;
             }
 
-            //
+            //init
+            bool flag = true;
+            auto gemmOp = ops.gemmOp;
+            auto biasOp = ops.biasOp;
+            auto reluOp = ops.reluOp;
 
+            //checking
+            /** gemmOp checking */
+            if(!gemmOp || gemmOp.getNumOperands() != 3)
+            {
+                flag = false;
+                return flag;
+            }
+
+            Value X  = gemmOp.getOperation()->getOperand(0);
+            Value W1 = gemmOp.getOperation()->getOperand(1);
+            Value T1 = gemmOp.getOperation()->getOperand(2);
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(gemmOp.getContext()));
+            if(X.getType() != expectedType || W1.getType() != expectedType || T1.getType() != expectedType)
+            {
+                flag = false;
+                return flag;
+            }
+            
+
+
+            
+            
+
+            
 
 
             //return
-            return true;
+            return flag;
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
