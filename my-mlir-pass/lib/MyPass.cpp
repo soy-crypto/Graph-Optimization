@@ -2485,10 +2485,14 @@ namespace toy_mlp_fusion
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
+            if(!gemmOp || !biasOp || !reluOp)
+            {
+                return false;
+            }
 
             //checking
             /** gemmOp checking */
-            if(!gemmOp || gemmOp.getNumOperands() != 3)
+            if(gemmOp.getNumOperands() != 3)
             {
                 flag = false;
                 return flag;
@@ -2505,6 +2509,8 @@ namespace toy_mlp_fusion
             }
 
             /** biasOp checking */
+            
+
 
 
 
