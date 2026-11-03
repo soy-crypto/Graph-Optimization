@@ -2540,16 +2540,15 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            auto maxtrixType = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
+            auto matrixType = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
             auto biasType = MemRefType::get({64}, Float32Type::get(biasOp.getContext()));
-            if(biasInput.getType() != maxtrixType || B1.getType() != biasType || T2.getType() != maxtrixType)
+            if(biasInput.getType() != matrixType || B1.getType() != biasType || T2.getType() != matrixType)
             {
                 flag = false;
                 return flag;
             }
 
             
-
             /** reluOp checking */
 
             //return
