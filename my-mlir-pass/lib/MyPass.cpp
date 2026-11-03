@@ -2469,7 +2469,7 @@ namespace toy_mlp_fusion
             gbrOps.reluOp = op;
         
             //return
-            return GBROps{};
+            return gbrOps;
         }
 
         bool isMatchedOps(GBROps ops) const
