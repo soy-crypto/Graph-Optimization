@@ -2451,13 +2451,13 @@ namespace toy_mlp_fusion
             struct GBROps gbrOps{};
 
             //get ReluOp
-            auto biasOp = dyn_cast_or_null<linalg::GenericOp>(op);
+            auto biasOp = dyn_cast_or_null<linalg::GenericOp>(op->getPrevNode());
             if(!biasOp)
             {
                 return {};
             }
 
-            auto gemmOp = dyn_cast_or_null<linalg::GenericOp>(biasOp);
+            auto gemmOp = dyn_cast_or_null<linalg::MatmulOp>(biasOp->getPrevNode());
             if(!gemmOp)
             {
                 return {};
@@ -2474,6 +2474,17 @@ namespace toy_mlp_fusion
 
         bool isMatchedOps(GBROps ops) const
         {
+            //validity
+            if(!ops.gemmOp)
+            {
+                return false;
+            }
+
+            //
+
+
+
+            //return
             return true;
         }
 
