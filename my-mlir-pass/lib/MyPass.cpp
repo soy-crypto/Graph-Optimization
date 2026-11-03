@@ -2542,12 +2542,13 @@ namespace toy_mlp_fusion
 
             auto maxtrixType = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
             auto biasType = MemRefType::get({64}, Float32Type::get(biasOp.getContext()));
-            if(biasInput.getType() != biasType || B1.getType() != maxtrixType || T2.getType() != maxtrixType)
+            if(biasInput.getType() != maxtrixType || B1.getType() != biasType || T2.getType() != maxtrixType)
             {
                 flag = false;
                 return flag;
             }
 
+            
 
             /** reluOp checking */
 
