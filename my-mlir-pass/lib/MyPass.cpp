@@ -2447,9 +2447,17 @@ namespace toy_mlp_fusion
                 return GBROps{};
             }
 
-            //get ReluOp
+            //init
+            struct GBROps gbrOps{}
 
-            sdsddf
+            //get ReluOp
+            
+
+
+
+
+
+            //return
             return GBROps{};
         }
 
