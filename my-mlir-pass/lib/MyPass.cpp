@@ -2503,14 +2503,11 @@ namespace toy_mlp_fusion
                 flag = false;
                 return flag;
             }
-            
 
-
-            
+            /** biasOp checking */
             
 
             
-
 
             //return
             return flag;
