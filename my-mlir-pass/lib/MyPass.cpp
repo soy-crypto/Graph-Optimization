@@ -2548,8 +2548,8 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            
             /** reluOp checking */
+            
 
             //return
             return flag;
