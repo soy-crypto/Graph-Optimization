@@ -2448,15 +2448,26 @@ namespace toy_mlp_fusion
             }
 
             //init
-            struct GBROps gbrOps{}
+            struct GBROps gbrOps{};
 
             //get ReluOp
+            auto biasOp = dyn_cast_or_null<linalg::GenericOp>(op);
+            if(!biasOp)
+            {
+                return {};
+            }
+
+            auto gemmOp = dyn_cast_or_null<linalg::GenericOp>(biasOp);
+            if(!gemmOp)
+            {
+                return {};
+            }
             
-
-
-
-
-
+            //update gbr
+            gbrOps.gemmOp = gemmOp;
+            gbrOps.biasOp = biasOp;
+            gbrOps.reluOp = op;
+        
             //return
             return GBROps{};
         }
