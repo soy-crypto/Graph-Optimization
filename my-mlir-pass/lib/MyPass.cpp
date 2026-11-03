@@ -2441,6 +2441,15 @@ namespace toy_mlp_fusion
         using OpRewritePattern::OpRewritePattern;
         struct GBROps collectOps(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return GBROps{};
+            }
+
+            //get ReluOp
+
+            sdsddf
             return GBROps{};
         }
 
@@ -2512,8 +2521,7 @@ namespace toy_mlp_fusion
             }
 
         }
-
-        
+ 
     };
 }
 
