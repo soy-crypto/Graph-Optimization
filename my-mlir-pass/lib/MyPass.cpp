@@ -2505,7 +2505,7 @@ namespace toy_mlp_fusion
             }
 
             /** biasOp checking */
-            
+
 
 
 
@@ -2519,7 +2519,6 @@ namespace toy_mlp_fusion
         {
             return true;
         }
-
         
         LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
         {
