@@ -2509,9 +2509,23 @@ namespace toy_mlp_fusion
             }
 
             /** biasOp checking */
+            auto maps = biasOp.getIndexingMapsArray();
+            auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
+            auto biasMap   = AffineMap::get(2, 0, getAffineDimExpr(1, biasOp.getContext()));
+            if(maps.size() != 3 || maps[0] != matrixMap || maps[1] != biasMap || maps[2] != matrixMap)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto iterators = biasOp.getIteratorTypesArray();
+            if(iterators.size() != 2 || iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel)
+            {
+                flag = false;
+                return flag;
+            }
+
             
-
-
 
 
 
