@@ -2525,14 +2525,34 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
+            if(biasOp.getNumDpsInputs() != 2 || biasOp.getNumDpsInits() != 1)
+            {
+                flag = false;
+                return flag;
+            }
             
+            Value biasInput = biasOp.getDpsInputs()[0];
+            Value B1 = biasOp.getDpsInputs()[1];
+            Value T2 = biasOp.getDpsInits()[0];
+            if(biasInput != T1)
+            {
+                flag = false;
+                return flag;
+            }
 
+            auto expectedType1 = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
+            if(biasInput.getType() != expectedType1 || B1.getType() != expectedType1 || T2.getType() != expectedType1)
+            {
+                flag = false;
+                return flag;
+            }
 
-
+            
             /** reluOp checking */
 
             //return
             return flag;
+
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
