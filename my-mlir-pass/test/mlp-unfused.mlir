@@ -60,6 +60,6 @@ func.func @mlp(%X:  memref<64x64xf32>, %W1: memref<64x64xf32>, %B1: memref<64xf3
         //return
         return
 
-  }
+}
 
 }

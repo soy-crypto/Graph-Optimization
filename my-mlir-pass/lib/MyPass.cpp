@@ -2599,6 +2599,34 @@ namespace toy_mlp_fusion
             bool flag = true;
 
             //checking
+            auto reluOp = ops.reluOp;
+            if(!reluOp)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto maps = reluOp.getIndexingMapsArray();
+            auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
+            if(maps.size() != 2 || maps[0] != matrixMap || maps[1] != matrixMap)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto iterators = biasOp.getIteratorTypesArray();
+            if(iterators.size() != 2 || iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel)
+            {
+                flag = false;
+                return flag;
+            }
+
+            if(reluOp.getNumDpsInputs() != ! || reluOp.getNumDpsInits() != 1)
+            {
+                flag = false;
+                return flag;
+            }
+            
 
             //return
             return flag;
