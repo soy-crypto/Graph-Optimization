@@ -32,6 +32,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "mlir/Transforms/WalkPatternRewriteDriver.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
+#include "mlir/IR/Matchers.h"
 
 using namespace mlir;
 
@@ -2632,7 +2633,7 @@ namespace toy_mlp_fusion
 
             auto reluInput = reluOp.getDpsInputs()[0];
             auto reluOutput = reluOp.getDpsInits()[0];
-            if(!reluInput || !reluOutput)
+            if(!reluInput || reluInput != T2 || !reluOutput )
             {
                 flag = false;
                 return flag;
@@ -2677,8 +2678,7 @@ namespace toy_mlp_fusion
             }
 
             Value w = body.getArgument(0);
-            Value z = body.getArgument(1);
-            if(reluOp.getOperand(0) != w || reluOp.getOperand(1) != z || !isConstantIntValue(z, 0) || yieldOp.getOperand(0) != addOp.getResult())
+            if(maximumOp.getOperand(0) != w || !matchPattern(maximumOp.getOperand(1), m_AnyZeroFloat()) || yieldOp.getOperand(0) != maximumOp.getResult())
             {
                 flag = false;
                 return flag;
