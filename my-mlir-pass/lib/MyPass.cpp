@@ -2499,12 +2499,13 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-        bool checkBias(GBROps ops) const
+        bool checkBias(GBROps ops, Value T1) const
         {
             //init
             auto flag = true;
 
             //checking
+            auto biasOp = ops.biasOp;
             auto maps = biasOp.getIndexingMapsArray();
             auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
             auto biasMap   = AffineMap::get(2, 0, getAffineDimExpr(1, biasOp.getContext()));
@@ -2551,7 +2552,6 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-
         bool checkRelu(GBROps ops) const
         {
             //init
@@ -2593,7 +2593,7 @@ namespace toy_mlp_fusion
             }           
 
             /** biasOp checking */
-            bool isMatchedBiasOp = checkBias(ops);
+            bool isMatchedBiasOp = checkBias(ops, ops.gemmOp.getOperation()->getOperand(2));
             if(!isMatchedBiasOp)
             {
                 flag = false;
