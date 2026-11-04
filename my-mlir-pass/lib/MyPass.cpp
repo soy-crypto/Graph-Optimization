@@ -2572,9 +2572,11 @@ namespace toy_mlp_fusion
 
             Value w = body.getArgument(0);
             Value b = body.getArgument(1);
-            Value unused = body.getArgument(2);
-            
-
+            if(addOp.getOperand(0) != w || addOp.getOperand(1) != b || yieldOp.getOperation()->getOperand(0) != addOp.getResult())
+            {
+                flag = false;
+                return flag;
+            }
 
             //return
             return flag;
@@ -2586,7 +2588,6 @@ namespace toy_mlp_fusion
             bool flag = true;
 
             //checking
-
 
 
             //return
