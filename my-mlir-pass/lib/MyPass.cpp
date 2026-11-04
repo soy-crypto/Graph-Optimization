@@ -2506,6 +2506,12 @@ namespace toy_mlp_fusion
 
             //checking
             auto biasOp = ops.biasOp;
+            if(!biasOp)
+            {
+                flag = false;
+                return flag;
+            }
+
             auto maps = biasOp.getIndexingMapsArray();
             auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
             auto biasMap   = AffineMap::get(2, 0, getAffineDimExpr(1, biasOp.getContext()));
@@ -2547,6 +2553,12 @@ namespace toy_mlp_fusion
 
             Block& body = biasOp.getOperation()->getRegion(0).front();
             SmallVector<Operation*> bodyOps;
+            if(body.getNumArguments() != 3)
+            {
+                flag = false;
+                return flag;
+            }
+
             for(Operation& op : body)
             {
                 bodyOps.push_back(&op);
@@ -2558,12 +2570,12 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            auto addOp = dyn_cast<arith::AddIOp>(bodyOps[0]);
-            auto yieldOp = dyn_cast<scf::YieldOp>(bodyOps[1]);
+            auto addOp = dyn_cast<arith::AddFOp>(bodyOps[0]);
+            auto yieldOp = dyn_cast<linalg::YieldOp>(bodyOps[1]);
             auto f32Type = Float32Type::get(biasOp.getContext());
             if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type || body.getArgument(2).getType() != f32Type ||
-                !addOp || !yieldOp ||
-                addOp.getResult().getType() || yieldOp.getOperation()->getOperand(0).getType())
+                !addOp || !yieldOp || yieldOp.getOperation()->getNumOperands() != 1 ||
+                addOp.getResult().getType() != f32Type || yieldOp.getOperand(0).getType() != f32Type)
             {
                 flag = false;
                 return flag;
@@ -2571,7 +2583,7 @@ namespace toy_mlp_fusion
 
             Value w = body.getArgument(0);
             Value b = body.getArgument(1);
-            if(addOp.getOperand(0) != w || addOp.getOperand(1) != b || yieldOp.getOperation()->getOperand(0) != addOp.getResult())
+            if(addOp.getOperand(0) != w || addOp.getOperand(1) != b || yieldOp.getOperand(0) != addOp.getResult())
             {
                 flag = false;
                 return flag;
@@ -2580,7 +2592,7 @@ namespace toy_mlp_fusion
             //return
             return flag;
         }
-        
+
 
         bool checkRelu(GBROps ops) const
         {
@@ -2588,7 +2600,6 @@ namespace toy_mlp_fusion
             bool flag = true;
 
             //checking
-
 
             //return
             return flag;
