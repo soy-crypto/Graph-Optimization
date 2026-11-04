@@ -2562,14 +2562,15 @@ namespace toy_mlp_fusion
             auto addOp = dyn_cast<arith::AddIOp>(bodyOps[0]);
             auto yieldOp = dyn_cast<scf::YieldOp>(bodyOps[1]);
             auto f32Type = Float32Type::get(biasOp.getContext());
-            if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type || body.getArgument(2).getType() != f32Type || 
-                addOp.getResult().getType() || yieldOp.getResults()[0].getType())
+            if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type || body.getArgument(2).getType() != f32Type ||
+                !addOp || !yieldOp ||
+                addOp.getResult().getType() || yieldOp.getOperation()->getOperand(0).getType())
             {
                 flag = false;
                 return flag;
             }
-
-
+            
+            
             //return
             return flag;
         }
