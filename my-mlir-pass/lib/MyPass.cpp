@@ -2733,7 +2733,6 @@ namespace toy_mlp_fusion
 
             //return
             return flag;
-
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
