@@ -2569,6 +2569,10 @@ namespace toy_mlp_fusion
                 flag = false;
                 return flag;
             }
+
+            Value w = body.getArgument(0);
+            Value b = body.getArgument(1);
+            Value unused = body.getArgument(2);
             
             
             //return
