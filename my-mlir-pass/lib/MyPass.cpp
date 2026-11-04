@@ -2724,7 +2724,7 @@ namespace toy_mlp_fusion
             }
 
             /** reluOp checking */
-            bool isMatchedReluOp = checkRelu(ops);
+            bool isMatchedReluOp = checkRelu(ops, ops.biasOp.getDpsInits()[0]);
             if(!isMatchedReluOp)
             {
                 flag = false;
