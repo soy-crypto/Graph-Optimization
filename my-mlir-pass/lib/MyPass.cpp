@@ -2548,8 +2548,11 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
+            Block& body = biasOp.getOperation()->getRegion(0).front();
+
             /** reluOp checking */
-            
+
+
 
             //return
             return flag;
