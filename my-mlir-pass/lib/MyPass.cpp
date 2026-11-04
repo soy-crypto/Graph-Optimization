@@ -2546,9 +2546,28 @@ namespace toy_mlp_fusion
             }
 
             Block& body = biasOp.getOperation()->getRegion(0).front();
-            auto f32Type = Float32Type::get(biasOp.getContext());
+            SmallVector<Operation*> bodyOps;
+            for(Operation& op : body)
+            {
+                bodyOps.push_back(&op);
+            }
 
-            
+            bodyOps.push_back(body.getTerminator());
+            if(bodyOps.size() != 2)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto addOp = dyn_cast<arith::AddIOp>(bodyOps[0]);
+            auto yieldOp = dyn_cast<scf::YieldOp>(bodyOps[1]);
+            auto f32Type = Float32Type::get(biasOp.getContext());
+            if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type || body.getArgument(2).getType() != f32Type || 
+                addOp.getResult().getType() || yieldOp.getResults()[0].getType())
+            {
+                flag = false;
+                return flag;
+            }
 
 
             //return
