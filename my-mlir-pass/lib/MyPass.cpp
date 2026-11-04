@@ -2552,7 +2552,6 @@ namespace toy_mlp_fusion
                 bodyOps.push_back(&op);
             }
 
-            bodyOps.push_back(body.getTerminator());
             if(bodyOps.size() != 2)
             {
                 flag = false;
@@ -2581,6 +2580,7 @@ namespace toy_mlp_fusion
             //return
             return flag;
         }
+        
 
         bool checkRelu(GBROps ops) const
         {
