@@ -2624,22 +2624,22 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            if(reluOp.getNumDpsInputs() != ! || reluOp.getNumDpsInits() != 1)
+            if(reluOp.getNumDpsInputs() != 1 || reluOp.getNumDpsInits() != 1)
             {
                 flag = false;
                 return flag;
             }
 
             auto reluInput = reluOp.getDpsInputs()[0];
-            auto reluOutput = reluOp.getInits()[0];
+            auto reluOutput = reluOp.getDpsInits()[0];
             if(!reluInput || !reluOutput)
             {
                 flag = false;
                 return flag;
             }
 
-            auto matrixType = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
-            if(reluInput.getType() != matrixType || reluOutput.getType() != matrixType())
+            auto matrixType = MemRefType::get({64, 64}, Float32Type::get(reluOp.getContext()));
+            if(reluInput.getType() != matrixType || reluOutput.getType() != matrixType)
             {
                 flag = false;
                 return flag;
@@ -2665,7 +2665,7 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            auto maximumOp = dyn_cast<arith::MaximumOp>(bodyOps[0]);
+            auto maximumOp = dyn_cast<arith::MaximumFOp>(bodyOps[0]);
             auto yieldOp = dyn_cast<linalg::YieldOp>(bodyOps[1]);
             auto f32Type = Float32Type::get(reluOp.getContext());
             if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type ||
