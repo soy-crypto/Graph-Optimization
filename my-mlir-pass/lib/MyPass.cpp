@@ -33,6 +33,7 @@
 #include "mlir/Transforms/WalkPatternRewriteDriver.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/Matchers.h"
+#include "mlir/IR/IRMapping.h"
 
 using namespace mlir;
 
