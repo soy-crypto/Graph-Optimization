@@ -2505,6 +2505,7 @@ namespace toy_mlp_fusion
             auto flag = true;
 
             //checking
+            /** head checking */
             auto biasOp = ops.biasOp;
             if(!biasOp)
             {
@@ -2551,6 +2552,7 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
+            /** body checking */
             Block& body = biasOp.getOperation()->getRegion(0).front();
             SmallVector<Operation*> bodyOps;
             if(body.getNumArguments() != 3)
@@ -2593,12 +2595,13 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-        bool checkRelu(GBROps ops) const
+        bool checkRelu(GBROps ops, Value T2) const
         {
             //init
             bool flag = true;
 
             //checking
+            /** head checking */
             auto reluOp = ops.reluOp;
             if(!reluOp)
             {
@@ -2607,14 +2610,14 @@ namespace toy_mlp_fusion
             }
 
             auto maps = reluOp.getIndexingMapsArray();
-            auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
+            auto matrixMap = AffineMap::getMultiDimIdentityMap(2, reluOp.getContext());
             if(maps.size() != 2 || maps[0] != matrixMap || maps[1] != matrixMap)
             {
                 flag = false;
                 return flag;
             }
 
-            auto iterators = biasOp.getIteratorTypesArray();
+            auto iterators = reluOp.getIteratorTypesArray();
             if(iterators.size() != 2 || iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel)
             {
                 flag = false;
@@ -2626,8 +2629,61 @@ namespace toy_mlp_fusion
                 flag = false;
                 return flag;
             }
-            
 
+            auto reluInput = reluOp.getDpsInputs()[0];
+            auto reluOutput = reluOp.getInits()[0];
+            if(!reluInput || !reluOutput)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto matrixType = MemRefType::get({64, 64}, Float32Type::get(biasOp.getContext()));
+            if(reluInput.getType() != matrixType || reluOutput.getType() != matrixType())
+            {
+                flag = false;
+                return flag;
+            }
+
+            /** body checking */
+            Block& body = reluOp.getOperation()->getRegion(0).front();
+            SmallVector<Operation*> bodyOps;
+            if(body.getNumArguments() != 2)
+            {
+                flag = false;
+                return flag;
+            }
+
+            for(Operation& op : body)
+            {
+                bodyOps.push_back(&op);
+            }
+
+            if(bodyOps.size() != 2)
+            {
+                flag = false;
+                return flag;
+            }
+
+            auto maximumOp = dyn_cast<arith::MaximumOp>(bodyOps[0]);
+            auto yieldOp = dyn_cast<linalg::YieldOp>(bodyOps[1]);
+            auto f32Type = Float32Type::get(reluOp.getContext());
+            if(body.getArgument(0).getType() != f32Type || body.getArgument(1).getType() != f32Type ||
+                !maximumOp || !yieldOp || yieldOp.getOperation()->getNumOperands() != 1 ||
+                maximumOp.getResult().getType() != f32Type || yieldOp.getOperand(0).getType() != f32Type)
+            {
+                flag = false;
+                return flag;
+            }
+
+            Value w = body.getArgument(0);
+            Value z = body.getArgument(1);
+            if(reluOp.getOperand(0) != w || reluOp.getOperand(1) != z || !isConstantIntValue(z, 0) || yieldOp.getOperand(0) != addOp.getResult())
+            {
+                flag = false;
+                return flag;
+            }
+            
             //return
             return flag;
         }
