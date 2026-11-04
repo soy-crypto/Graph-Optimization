@@ -2471,27 +2471,14 @@ namespace toy_mlp_fusion
             //return
             return gbrOps;
         }
-
-        bool isMatchedOps(GBROps ops) const
+        
+        bool checkGEMM(GBROps ops) const
         {
-            //validity
-            if(!ops.gemmOp)
-            {
-                return false;
-            }
-
             //init
             bool flag = true;
-            auto gemmOp = ops.gemmOp;
-            auto biasOp = ops.biasOp;
-            auto reluOp = ops.reluOp;
-            if(!gemmOp || !biasOp || !reluOp)
-            {
-                return false;
-            }
 
             //checking
-            /** gemmOp checking */
+            auto gemmOp = ops.gemmOp;
             if(gemmOp.getNumOperands() != 3)
             {
                 flag = false;
@@ -2508,7 +2495,16 @@ namespace toy_mlp_fusion
                 return flag;
             }
 
-            /** biasOp checking */
+            //return
+            return flag;
+        }
+
+        bool checkBias(GBROps ops) const
+        {
+            //init
+            auto flag = true;
+
+            //checking
             auto maps = biasOp.getIndexingMapsArray();
             auto matrixMap = AffineMap::getMultiDimIdentityMap(2, biasOp.getContext());
             auto biasMap   = AffineMap::get(2, 0, getAffineDimExpr(1, biasOp.getContext()));
@@ -2550,13 +2546,70 @@ namespace toy_mlp_fusion
 
             Block& body = biasOp.getOperation()->getRegion(0).front();
 
-            /** reluOp checking */
 
+            //return
+            return flag;
+        }
+
+
+        bool checkRelu(GBROps ops) const
+        {
+            //init
+            bool flag = true;
+
+            //checking
 
 
             //return
             return flag;
+        }
 
+
+        bool isMatchedOps(GBROps ops) const
+        {
+            //validity
+            if(!ops.gemmOp)
+            {
+                return false;
+            }
+
+            //init
+            bool flag = true;
+            auto gemmOp = ops.gemmOp;
+            auto biasOp = ops.biasOp;
+            auto reluOp = ops.reluOp;
+            if(!gemmOp || !biasOp || !reluOp)
+            {
+                return false;
+            }
+
+            //checking
+            /** gemmOp checking */
+            bool isMatchedGEMMOp = checkGEMM(ops);
+            if(!isMatchedGEMMOp)
+            {
+                flag = false;
+                return flag;
+            }           
+
+            /** biasOp checking */
+            bool isMatchedBiasOp = checkBias(ops);
+            if(!isMatchedBiasOp)
+            {
+                flag = false;
+                return flag;
+            }
+
+            /** reluOp checking */
+            bool isMatchedReluOp = checkRelu(ops);
+            if(!isMatchedReluOp)
+            {
+                flag = false;
+                return flag;
+            }
+
+            //return
+            return flag;
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
