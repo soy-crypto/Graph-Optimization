@@ -2546,6 +2546,8 @@ namespace toy_mlp_fusion
             }
 
             Block& body = biasOp.getOperation()->getRegion(0).front();
+            
+            
 
 
             //return
@@ -2558,6 +2560,7 @@ namespace toy_mlp_fusion
             bool flag = true;
 
             //checking
+
 
 
             //return
