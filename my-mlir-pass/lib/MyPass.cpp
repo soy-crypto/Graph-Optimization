@@ -2593,7 +2593,6 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-
         bool checkRelu(GBROps ops) const
         {
             //init
