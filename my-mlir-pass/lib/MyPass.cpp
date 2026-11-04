@@ -2688,7 +2688,6 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-
         bool isMatchedOps(GBROps ops) const
         {
             //validity
@@ -2734,7 +2733,7 @@ namespace toy_mlp_fusion
 
             //return
             return flag;
-            
+
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
