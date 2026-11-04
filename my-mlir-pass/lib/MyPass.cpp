@@ -2546,7 +2546,8 @@ namespace toy_mlp_fusion
             }
 
             Block& body = biasOp.getOperation()->getRegion(0).front();
-            
+            auto f32Type = Float32Type::get(biasOp.getContext());
+
             
 
 
