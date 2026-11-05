@@ -2738,6 +2738,17 @@ namespace toy_mlp_fusion
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
         {
+            //validity
+            if(!ops.gemmOp)
+            {
+                return false;
+            }
+
+            //init
+            bool flag = true;
+
+            //rewrite
+            
             return true;
         }
         
@@ -2822,169 +2833,3 @@ void registerMyPass()
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
     PassRegistration<toy_mlp_fusion::ToyGEMMBiasReluFusionPattern>();
 }
-
-/**
-bool rewriteOps(GBROps ops, PatternRewriter &rewriter) const
-{
-    // Validate everything before modifying the IR.
-    if (!isMatchedOps(ops))
-        return false;
-
-    auto gemmOp = ops.gemmOp;
-    auto biasOp = ops.biasOp;
-    auto reluOp = ops.reluOp;
-
-    if (gemmOp->getNextNode() != biasOp.getOperation() ||
-        biasOp->getNextNode() != reluOp.getOperation())
-        return false;
-
-    Value X  = gemmOp.getDpsInputs()[0];
-    Value W1 = gemmOp.getDpsInputs()[1];
-    Value T1 = gemmOp.getDpsInits()[0];
-
-    Value B1 = biasOp.getDpsInputs()[1];
-    Value T2 = biasOp.getDpsInits()[0];
-    Value Y  = reluOp.getDpsInits()[0];
-
-    // Restrict this first implementation to separate fresh buffers.
-    if (!T1.getDefiningOp<memref::AllocOp>() ||
-        !T2.getDefiningOp<memref::AllocOp>() ||
-        !Y.getDefiningOp<memref::AllocOp>())
-        return false;
-
-    if (T1 == T2 || T1 == Y || T2 == Y ||
-        X == T1 || X == T2 || X == Y ||
-        W1 == T1 || W1 == T2 || W1 == Y ||
-        B1 == T1 || B1 == T2 || B1 == Y)
-        return false;
-
-    auto isAfterRelu = [&](Operation *op) {
-        return op->getBlock() == reluOp->getBlock() &&
-               reluOp->isBeforeInBlock(op);
-    };
-
-    // T1 may have an initialization fill before GEMM.
-    // Reject other readers, writers, aliases, or escapes.
-    for (Operation *user : T1.getUsers())
-    {
-        if (user == gemmOp.getOperation() ||
-            user == biasOp.getOperation())
-            continue;
-
-        if (isa<memref::DeallocOp>(user) && isAfterRelu(user))
-            continue;
-
-        if (isa<linalg::FillOp>(user) &&
-            user->getBlock() == gemmOp->getBlock() &&
-            user->isBeforeInBlock(gemmOp.getOperation()))
-            continue;
-
-        return false;
-    }
-
-    for (Operation *user : T2.getUsers())
-    {
-        if (user == biasOp.getOperation() ||
-            user == reluOp.getOperation())
-            continue;
-
-        if (isa<memref::DeallocOp>(user) && isAfterRelu(user))
-            continue;
-
-        return false;
-    }
-
-    // No use or alias of Y may exist before its original write.
-    for (Operation *user : Y.getUsers())
-    {
-        if (user == reluOp.getOperation())
-            continue;
-
-        if (!isAfterRelu(user))
-            return false;
-    }
-
-    Location loc = gemmOp.getLoc();
-    OpBuilder::InsertionGuard guard(rewriter);
-    rewriter.setInsertionPoint(gemmOp);
-
-    Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
-    Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
-    Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
-
-    // Clone a scalar body, preserving its operations and attributes.
-    auto cloneBody = [&](Block &body, ValueRange arguments) -> Value {
-        IRMapping mapping;
-
-        for (unsigned n = 0; n < arguments.size(); ++n)
-            mapping.map(body.getArgument(n), arguments[n]);
-
-        for (Operation &op : body.without_terminator())
-            rewriter.clone(op, mapping);
-
-        auto yield = cast<linalg::YieldOp>(body.getTerminator());
-        return mapping.lookupOrDefault(yield.getOperand(0));
-    };
-
-    // for i
-    auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
-    rewriter.setInsertionPointToStart(iLoop.getBody());
-    Value i = iLoop.getInductionVar();
-
-    // for j
-    auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
-    rewriter.setInsertionPointToStart(jLoop.getBody());
-    Value j = jLoop.getInductionVar();
-
-    Value initialAcc = rewriter.create<memref::LoadOp>(
-        loc, T1, ValueRange{i, j});
-
-    // for k, carrying the accumulator
-    auto kLoop = rewriter.create<scf::ForOp>(
-        loc, c0, c64, c1, ValueRange{initialAcc});
-
-    // Explicitly supply the terminator for the loop with iter_args.
-    if (Operation *terminator = kLoop.getBody()->getTerminator())
-        rewriter.eraseOp(terminator);
-
-    rewriter.setInsertionPointToStart(kLoop.getBody());
-
-    Value k = kLoop.getInductionVar();
-    Value acc = kLoop.getRegionIterArgs()[0];
-
-    Value x = rewriter.create<memref::LoadOp>(
-        loc, X, ValueRange{i, k});
-
-    Value w = rewriter.create<memref::LoadOp>(
-        loc, W1, ValueRange{k, j});
-
-    Value nextAcc = cloneBody(
-        gemmOp->getRegion(0).front(), ValueRange{x, w, acc});
-
-    rewriter.create<scf::YieldOp>(loc, ValueRange{nextAcc});
-
-    // Bias and ReLU execute after the complete reduction.
-    rewriter.setInsertionPointAfter(kLoop);
-
-    Value sum = kLoop.getResult(0);
-    Value bias = rewriter.create<memref::LoadOp>(
-        loc, B1, ValueRange{j});
-
-    // The checked bias/ReLU bodies do not use their output arguments.
-    Value biased = cloneBody(
-        biasOp->getRegion(0).front(), ValueRange{sum, bias, sum});
-
-    Value activated = cloneBody(
-        reluOp->getRegion(0).front(), ValueRange{biased, biased});
-
-    rewriter.create<memref::StoreOp>(
-        loc, activated, Y, ValueRange{i, j});
-
-    rewriter.eraseOp(reluOp);
-    rewriter.eraseOp(biasOp);
-    rewriter.eraseOp(gemmOp);
-
-    return true;
-}
-
- */
