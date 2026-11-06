@@ -2790,13 +2790,16 @@ namespace toy_mlp_fusion
             Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
             Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
 
-            /* row loop */
+            /* row and column loop head*/
             auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
-            Value i = iLoop.getInductionVar();
             rewriter.setInsertionPointToStart(iLoop.getBody());
-
-            /* colum loop */
             auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(jLoop.getBody());
+            
+            /** row and colum loop body */
+            Value i = iLoop.getInductionVar();
+            Value j = jLoop.getInductionVar();
+            
             
 
             
