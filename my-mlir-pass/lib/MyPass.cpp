@@ -2792,6 +2792,15 @@ namespace toy_mlp_fusion
 
             /* row loop */
             auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            Value i = iLoop.getInductionVar();
+            rewriter.setInsertionPointToStart(iLoop.getBody());
+
+            /* colum loop */
+            auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            
+
+            
+
 
             
             return true;
