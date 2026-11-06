@@ -2776,18 +2776,20 @@ namespace toy_mlp_fusion
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
-            Value X = gemmOp.getDpsInputs()[0];
+            Value X  = gemmOp.getDpsInputs()[0];
             Value W1 = gemmOp.getDpsInputs()[0];
             Value B1 = biasOp.getDpsInputs()[0];
-            Value Y = reluOp.getDpsInits()[0];
-            Location loc = gemmOp.getLoc();
-            Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
-            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
-            Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+            Value Y  = reluOp.getDpsInits()[0];
 
             //rewrite
+            /* constants for loops' head */
+            Location loc = gemmOp.getLoc();
             rewriter.setInsertionPoint(gemmOp);
-            /* row and column loop head*/
+            Value c0  = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
+            Value c1  = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+
+            /* row and column loop head */
             auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
             rewriter.setInsertionPointToStart(iLoop.getBody());
             auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
@@ -2796,13 +2798,19 @@ namespace toy_mlp_fusion
             /** row and colum loop body */
             Value i = iLoop.getInductionVar();
             Value j = jLoop.getInductionVar();
-            
-            
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, APFloat(0.0f), rewriter.getF32Type());
 
-            
+            /** k loop */
+            auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange{zero});
+            rewriter.setInsertionPointToStart(kLoop.getBody());
+            Value k = kLoop.getInductionVar();
+            Value a = rewriter.create<memref::LoadOp>(loc, X, ValueRange{i, k});
+            Value b = rewriter.create<memref::LoadOp>(loc, W1, ValueRange{k, j});
+            Value product = cloneBody(gemmOp.getBody(), );
 
 
-            
+
+            //Return
             return true;
         }
         
