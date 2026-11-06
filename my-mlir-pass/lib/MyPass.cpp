@@ -2802,12 +2802,19 @@ namespace toy_mlp_fusion
 
             /** k loop */
             auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange{zero});
+
+            /** compute X[i, k] * W1[k, j] */
             rewriter.setInsertionPointToStart(kLoop.getBody());
             Value k = kLoop.getInductionVar();
             Value a = rewriter.create<memref::LoadOp>(loc, X, ValueRange{i, k});
             Value b = rewriter.create<memref::LoadOp>(loc, W1, ValueRange{k, j});
-            Value product = cloneBody(gemmOp.getBody(), );
+            Value product = cloneBody(gemmOp.getBody(), {a, b}, rewriter);
+            Value sum = rewriter.create<arith::AddFOp>(loc, product, kLoop.getInitArgs()[0]);
+            rewriter.create<scf::YieldOp>(loc, sum);
 
+            /** compute bias */
+
+            /** compuite relu */
 
 
             //Return
