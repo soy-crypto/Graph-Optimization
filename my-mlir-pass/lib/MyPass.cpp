@@ -2736,6 +2736,24 @@ namespace toy_mlp_fusion
             return flag;
         }
 
+        Value cloneBody(Block& body, ValueRange arguments, PatternRewriter& rewriter) const
+        {
+            //validity
+            if(body.isEntryBlock())
+            {
+                return {};
+            }
+
+            //init
+            IRMapping map;
+            for(unsigned i = 0; i < arguments.size(): i++)
+            {
+                
+            }
+            
+
+        }
+
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
         {
             //validity
