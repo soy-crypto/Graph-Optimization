@@ -2774,6 +2774,11 @@ namespace toy_mlp_fusion
             bool flag = true;
 
             //rewrite
+            auto gemmOp = ops.gemmOp;
+            auto biasOp = ops.biasOp;
+            auto reluOp = ops.reluOp;
+
+            Value X = gemmOp.getDpsInputs();
             
             
             return true;
