@@ -2763,7 +2763,8 @@ namespace toy_mlp_fusion
             /** clone yieldOp */
             auto yieldOp = dyn_cast<linalg::YieldOp>(body.getTerminator());
             
-
+            //return
+            return mapping.lookupOrDefault(yieldOp.getOperand(0));
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
