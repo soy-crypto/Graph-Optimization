@@ -2772,24 +2772,21 @@ namespace toy_mlp_fusion
 
             //init
             bool flag = true;
-
-            //rewrite
+            
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
-
             Value X = gemmOp.getDpsInputs()[0];
             Value W1 = gemmOp.getDpsInputs()[0];
             Value B1 = biasOp.getDpsInputs()[0];
             Value Y = reluOp.getDpsInits()[0];
-
             Location loc = gemmOp.getLoc();
-            rewriter.setInsertionPoint(gemmOp);
-
             Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
             Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
             Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
 
+            //rewrite
+            rewriter.setInsertionPoint(gemmOp);
             /* row and column loop head*/
             auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
             rewriter.setInsertionPointToStart(iLoop.getBody());
