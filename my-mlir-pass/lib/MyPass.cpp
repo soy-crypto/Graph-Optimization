@@ -2738,12 +2738,6 @@ namespace toy_mlp_fusion
 
         Value cloneBody(Block& body, ValueRange arguments, PatternRewriter& rewriter) const
         {
-            //validity
-            if(body.isEntryBlock())
-            {
-                return {};
-            }
-
             //init
             IRMapping mapping;
             
@@ -2751,7 +2745,7 @@ namespace toy_mlp_fusion
             /** replacing head */
             for(unsigned i = 0; i < arguments.size(); i++)
             {
-                mapping.map(body.getArgument(0), arguments[i]);
+                mapping.map(body.getArgument(i), arguments[i]);
             }
 
             /** clone ops */
@@ -2760,11 +2754,12 @@ namespace toy_mlp_fusion
                 rewriter.clone(op, mapping);
             }
 
-            /** clone yieldOp */
+            //update return value
             auto yieldOp = dyn_cast<linalg::YieldOp>(body.getTerminator());
+            Value result = mapping.lookupOrDefault(yieldOp.getOperand(0));
             
             //return
-            return mapping.lookupOrDefault(yieldOp.getOperand(0));
+            return result;
         }
 
         bool rewriteOps(GBROps ops, PatternRewriter& rewriter) const
