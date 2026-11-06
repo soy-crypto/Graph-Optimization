@@ -2781,6 +2781,7 @@ namespace toy_mlp_fusion
             Value X = gemmOp.getDpsInputs()[0];
             Value W1 = gemmOp.getDpsInputs()[0];
             Value B1 = biasOp.getDpsInputs()[0];
+            Value Y = reluOp.getDpsInits()[0];
 
             Location loc = gemmOp.getLoc();
             rewriter.setInsertionPoint(gemmOp);
