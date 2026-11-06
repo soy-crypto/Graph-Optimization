@@ -2745,11 +2745,23 @@ namespace toy_mlp_fusion
             }
 
             //init
-            IRMapping map;
-            for(unsigned i = 0; i < arguments.size(): i++)
+            IRMapping mapping;
+            
+            //clone
+            /** replacing head */
+            for(unsigned i = 0; i < arguments.size(); i++)
             {
-                
+                mapping.map(body.getArgument(0), arguments[i]);
             }
+
+            /** clone ops */
+            for(Operation& op : body.without_terminator())
+            {
+                rewriter.clone(op, mapping);
+            }
+
+            /** clone yieldOp */
+            auto yieldOp = dyn_cast<linalg::YieldOp>(body.getTerminator());
             
 
         }
