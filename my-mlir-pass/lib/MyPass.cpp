@@ -2778,8 +2778,17 @@ namespace toy_mlp_fusion
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
 
-            Value X = gemmOp.getDpsInputs();
-            
+            Value X = gemmOp.getDpsInputs()[0];
+            Value W1 = gemmOp.getDpsInputs()[0];
+            Value B1 = biasOp.getDpsInputs()[0];
+
+            Location loc = gemmOp.getLoc();
+            rewriter.setInsertionPoint(gemmOp);
+
+            Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
+            Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+
             
             return true;
         }
