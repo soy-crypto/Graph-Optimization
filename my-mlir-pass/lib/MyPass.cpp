@@ -2790,6 +2790,9 @@ namespace toy_mlp_fusion
             Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
             Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
 
+            /* row loop */
+            auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+
             
             return true;
         }
