@@ -2808,14 +2808,19 @@ namespace toy_mlp_fusion
             Value k = kLoop.getInductionVar();
             Value a = rewriter.create<memref::LoadOp>(loc, X, ValueRange{i, k});
             Value b = rewriter.create<memref::LoadOp>(loc, W1, ValueRange{k, j});
-            Value product = cloneBody(gemmOp.getBody(), {a, b}, rewriter);
-            Value sum = rewriter.create<arith::AddFOp>(loc, product, kLoop.getInitArgs()[0]);
+            Value acc = kLoop.getRegionIterArgs()[0];
+            Value sum = cloneBody(gemmOp.getOperation()->getRegion(0).front(), {a, b, acc}, rewriter);
             rewriter.create<scf::YieldOp>(loc, sum);
 
-            /** compute bias */
+            /** compute bias and relu */
+            rewriter.setInsertionPointAfter(kLoop);
+            Value gemmValue = kLoop.getResult(0);
+            Value bias = rewriter.create<memref::LoadOp>(loc, B1, ValueRange{j});
+            Value biasSum  = cloneBody(biasOp.getOperation()->getRegion(0).front(), {gemmValue, bias, bias}, rewriter);
+            Value reluValue = cloneBody(reluOp.getOperation()->getRegion(0).front(), {biasSum, biasSum}, rewriter);
 
-            /** compuite relu */
-
+            /** update Y[i, j] */
+            rewriter.create<memref::StoreOp>(loc, reluValue, Y, ValueRange{i, j});
 
             //Return
             return true;
