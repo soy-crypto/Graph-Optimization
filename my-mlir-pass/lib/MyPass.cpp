@@ -2816,7 +2816,7 @@ namespace toy_mlp_fusion
             rewriter.setInsertionPointAfter(kLoop);
             Value gemmValue = kLoop.getResult(0);
             Value bias = rewriter.create<memref::LoadOp>(loc, B1, ValueRange{j});
-            Value biasSum  = cloneBody(biasOp.getOperation()->getRegion(0).front(), {gemmValue, bias, bias}, rewriter);
+            Value biasSum   = cloneBody(biasOp.getOperation()->getRegion(0).front(), {gemmValue, bias, bias}, rewriter);
             Value reluValue = cloneBody(reluOp.getOperation()->getRegion(0).front(), {biasSum, biasSum}, rewriter);
 
             /** update Y[i, j] */
