@@ -2777,8 +2777,8 @@ namespace toy_mlp_fusion
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
             Value X  = gemmOp.getDpsInputs()[0];
-            Value W1 = gemmOp.getDpsInputs()[0];
-            Value B1 = biasOp.getDpsInputs()[0];
+            Value W1 = gemmOp.getDpsInputs()[1];
+            Value B1 = biasOp.getDpsInputs()[1];
             Value Y  = reluOp.getDpsInits()[0];
 
             //rewrite
@@ -2821,6 +2821,11 @@ namespace toy_mlp_fusion
 
             /** update Y[i, j] */
             rewriter.create<memref::StoreOp>(loc, reluValue, Y, ValueRange{i, j});
+
+            //erase the original ops
+            rewriter.eraseOp(gemmOp);
+            rewriter.eraseOp(biasOp);
+            rewriter.eraseOp(reluOp);
 
             //Return
             return true;
