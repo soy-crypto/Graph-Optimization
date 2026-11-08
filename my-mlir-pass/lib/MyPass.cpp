@@ -2692,35 +2692,24 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-        bool hasOnlyExprectedUsers(Value buffer, SmallVector<Operation*> users) const
+        bool hasOnlyExpectedUsers(Value buffer, SmallVector<Operation*> expectedUsers) const
         {
-            //
-            if(!buffer.getDefiningOp<memref::AllocOp>())
-            {
-                return false;
-            }
-
             //check other uses
             bool flag = true;
             for(Operation* user : buffer.getUsers())
             {
-                if(|| !isa<memref::DeallocOp>(user))
+                if(expectedUsers.size() != buffer.getUsers().size() || !llvm::is_contained(expectedUsers, user))
                 {
                     flag = false;
-                }
-
-                if(!flag)
-                {
                     break;
                 }
-
             }//
 
             //return
             return flag;    
         }
 
-        bool checkValidIntermediateBuffers(GBROps ops) const
+        bool checkIntermediateBuffers(GBROps ops) const
         {
             //init
             bool flag = true;
@@ -2735,7 +2724,7 @@ namespace toy_mlp_fusion
             /** check T1 */
             SmallVector<Operation*> usersT1;
             auto deallocT1Op = memref::findDealloc(T1);
-            if(!deallocT1Op)
+            if(!deallocT1Op || !(*deallocT1Op) || !isa<memref::DeallocOp>(*deallocT1Op))
             {
                 return false;
             }
@@ -2750,18 +2739,18 @@ namespace toy_mlp_fusion
             }
 
             usersT1.push_back(fillOp);
-
-            if(!hasOnlyExprectedUsers(T1, usersT1))
+            
+            auto actualUsersT1 = T1.getUsers();
+            if(std::is_permutation(usersT1.begin(), usersT1.end(), actualUsersT1.begin(), actualUsersT1.end()));
             {
                 flag = false;
                 return flag;
             }
 
-
             /** check T2 */
             SmallVector<Operation*> usersT2;
             auto deallocT2Op = memref::findDealloc(T2);
-            if(!deallocT2Op)
+            if(!deallocT2Op || !(*deallocT2Op) || !isa<memref::DeallocOp>(*deallocT2Op))
             {
                 return false;
             }
@@ -2770,7 +2759,8 @@ namespace toy_mlp_fusion
             usersT2.push_back(ops.biasOp);
             usersT2.push_back(ops.reluOp);
             
-            if(!hasOnlyExprectedUsers(T2, usersT2))
+            auto actualUsersT2 = T1.getUsers();
+            if(std::is_permutation(usersT2.begin(), usersT2.end(), actualUsersT2.begin(), actualUsersT2.end()));
             {
                 flag = false;
                 return flag;
