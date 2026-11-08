@@ -2866,7 +2866,7 @@ namespace toy_mlp_fusion
         MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ToyFusionPass);
         StringRef getArgument() const override
         {
-            return "toy-fusion";
+            return "toy-mlp-fusion";
         }
 
         StringRef getDescription() const override
