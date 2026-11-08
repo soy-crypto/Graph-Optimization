@@ -2798,7 +2798,7 @@ namespace toy_mlp_fusion
             /** row and colum loop body */
             Value i = iLoop.getInductionVar();
             Value j = jLoop.getInductionVar();
-            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, APFloat(0.0f), rewriter.getF32Type());
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
 
             /** k loop */
             auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange{zero});
@@ -2878,7 +2878,7 @@ namespace toy_mlp_fusion
         {
             //init
             RewritePatternSet patterns(&getContext());
-            patterns.add<ToyFusionPass>(&getContext());
+            patterns.add<toy_mlp_fusion::ToyGEMMBiasReluFusionPattern>(&getContext());
             FrozenRewritePatternSet frozen(std::move(patterns));
 
             //apply
@@ -2910,5 +2910,5 @@ void registerMyPass()
 
     //gemm, mlp, transformer
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
-    PassRegistration<toy_mlp_fusion::ToyGEMMBiasReluFusionPattern>();
+    PassRegistration<toy_mlp_fusion::ToyFusionPass>();
 }
