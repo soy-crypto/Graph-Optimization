@@ -2735,7 +2735,7 @@ namespace toy_mlp_fusion
             {
                 return false;
             }
-
+            
             //checking
             /** gemmOp checking */
             bool isMatchedGEMMOp = checkGEMM(ops);
@@ -2759,6 +2759,14 @@ namespace toy_mlp_fusion
             {
                 flag = false;
                 return flag;
+            }
+
+            /** intermediate buffer checking */
+            bool isValidIntermediateBuffers = checkIntermediateBuffers(ops);
+            if(!isValidIntermediateBuffers)
+            {
+                flag = false;
+                return;
             }
 
             //return
