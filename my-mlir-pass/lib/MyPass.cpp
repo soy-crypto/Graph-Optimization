@@ -2692,7 +2692,30 @@ namespace toy_mlp_fusion
 
         bool hasOnlyExprectedUsers(Value buffer, Operation* producer, Operation* consumer, Operation* fill = nullptr) const
         {
-            return true;    
+            //init
+            if(!buffer.getDefiningOp<memref::AllocOp>())
+            {
+                return false;
+            }
+
+            //check other uses
+            bool flag = true;
+            for(Operation* user : buffer.getUsers())
+            {
+                if(user != producer && user != consumer && user != fill || !isa<memref::DeallocOp>(user))
+                {
+                    flag = false;
+                }
+
+                if(!flag)
+                {
+                    break;
+                }
+
+            }//
+
+            //return
+            return flag;    
         }
 
         bool isMatchedOps(GBROps ops) const
