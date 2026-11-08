@@ -2441,6 +2441,7 @@ namespace toy_mlp_fusion
     struct ToyGEMMBiasReluFusionPattern : OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
+
         struct GBROps collectOps(linalg::GenericOp op) const
         {
             //validity
@@ -2687,6 +2688,11 @@ namespace toy_mlp_fusion
             
             //return
             return flag;
+        }
+
+        bool hasOnlyExprectedUsers(Value buffer, Operation* producer, Operation* consumer, Operation* fill = nullptr) const
+        {
+            return true;    
         }
 
         bool isMatchedOps(GBROps ops) const
