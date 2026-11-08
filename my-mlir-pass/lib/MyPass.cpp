@@ -2692,36 +2692,9 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-        bool hasOnlyExpectedUsers(Value buffer, SmallVector<Operation*> expectedUsers) const
+        bool checkT1Buffer(Value T1, GBROps ops) const
         {
-            //check other uses
-            bool flag = true;
-            for(Operation* user : buffer.getUsers())
-            {
-                if(expectedUsers.size() != buffer.getUsers().size() || !llvm::is_contained(expectedUsers, user))
-                {
-                    flag = false;
-                    break;
-                }
-            }//
-
-            //return
-            return flag;    
-        }
-
-        bool checkIntermediateBuffers(GBROps ops) const
-        {
-            //init
-            bool flag = true;
-            Value T1 = ops.gemmOp.getDpsInits()[0];
-            Value T2 = ops.biasOp.getDpsInits()[0];
-            if(!T1.getDefiningOp<memref::AllocOp>() || !T2.getDefiningOp<memref::AllocOp>())
-            {
-                return false;
-            }
-            
             //check
-            /** check T1 */
             SmallVector<Operation*> usersT1;
             auto deallocT1Op = memref::findDealloc(T1);
             if(!deallocT1Op || !(*deallocT1Op) || !isa<memref::DeallocOp>(*deallocT1Op))
@@ -2741,13 +2714,21 @@ namespace toy_mlp_fusion
             usersT1.push_back(fillOp);
             
             auto actualUsersT1 = T1.getUsers();
-            if(std::is_permutation(usersT1.begin(), usersT1.end(), actualUsersT1.begin(), actualUsersT1.end()));
+            if(!std::is_permutation(usersT1.begin(), usersT1.end(), actualUsersT1.begin(), actualUsersT1.end()))
             {
-                flag = false;
-                return flag;
+                return false;
             }
 
-            /** check T2 */
+            //return
+            return true;
+        }
+
+        bool checkT2Buffer(Value T2, GBROps ops) const
+        {
+            //init
+            bool flag = true;
+
+            //check
             SmallVector<Operation*> usersT2;
             auto deallocT2Op = memref::findDealloc(T2);
             if(!deallocT2Op || !(*deallocT2Op) || !isa<memref::DeallocOp>(*deallocT2Op))
@@ -2759,16 +2740,31 @@ namespace toy_mlp_fusion
             usersT2.push_back(ops.biasOp);
             usersT2.push_back(ops.reluOp);
             
-            auto actualUsersT2 = T1.getUsers();
-            if(std::is_permutation(usersT2.begin(), usersT2.end(), actualUsersT2.begin(), actualUsersT2.end()));
+            auto actualUsersT2 = T2.getUsers();
+            if(!std::is_permutation(usersT2.begin(), usersT2.end(), actualUsersT2.begin(), actualUsersT2.end()))
             {
-                flag = false;
-                return flag;
+                return false;
             }
 
             //return
-            return flag;
+            return true;
+        }
 
+        bool checkIntermediateBuffers(GBROps ops) const
+        {
+            //init
+            Value T1 = ops.gemmOp.getDpsInits()[0];
+            Value T2 = ops.biasOp.getDpsInits()[0];
+            if(!T1.getDefiningOp<memref::AllocOp>() || !T2.getDefiningOp<memref::AllocOp>())
+            {
+                return false;
+            }
+            
+            //check
+            bool flag = checkT1Buffer(T1, ops) && checkT2Buffer(T2, ops);
+
+            //return
+            return flag;
         }
 
         bool isMatchedOps(GBROps ops) const
@@ -2780,7 +2776,6 @@ namespace toy_mlp_fusion
             }
 
             //init
-            bool flag = true;
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
@@ -2794,36 +2789,32 @@ namespace toy_mlp_fusion
             bool isMatchedGEMMOp = checkGEMM(ops);
             if(!isMatchedGEMMOp)
             {
-                flag = false;
-                return flag;
+                return false;
             }           
 
             /** biasOp checking */
             bool isMatchedBiasOp = checkBias(ops, ops.gemmOp.getOperation()->getOperand(2));
             if(!isMatchedBiasOp)
             {
-                flag = false;
-                return flag;
+                return false;
             }
 
             /** reluOp checking */
             bool isMatchedReluOp = checkRelu(ops, ops.biasOp.getDpsInits()[0]);
             if(!isMatchedReluOp)
             {
-                flag = false;
-                return flag;
+                return false;
             }
 
             /** intermediate buffer checking */
             bool isValidIntermediateBuffers = checkIntermediateBuffers(ops);
             if(!isValidIntermediateBuffers)
             {
-                flag = false;
-                return;
+                return false;
             }
 
             //return
-            return flag;
+            return true;
         }
 
         Value cloneBody(Block& body, ValueRange arguments, PatternRewriter& rewriter) const
