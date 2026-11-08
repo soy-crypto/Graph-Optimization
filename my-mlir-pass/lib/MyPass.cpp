@@ -20,6 +20,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
+#include "llvm/ADT/STLExtras.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 
 #include <string>
 #include <cstdint>
@@ -2690,9 +2692,9 @@ namespace toy_mlp_fusion
             return flag;
         }
 
-        bool hasOnlyExprectedUsers(Value buffer, Operation* producer, Operation* consumer, Operation* fill = nullptr) const
+        bool hasOnlyExprectedUsers(Value buffer, SmallVector<Operation*> users) const
         {
-            //init
+            //
             if(!buffer.getDefiningOp<memref::AllocOp>())
             {
                 return false;
@@ -2702,7 +2704,7 @@ namespace toy_mlp_fusion
             bool flag = true;
             for(Operation* user : buffer.getUsers())
             {
-                if(user != producer && user != consumer && user != fill || !isa<memref::DeallocOp>(user))
+                if(|| !isa<memref::DeallocOp>(user))
                 {
                     flag = false;
                 }
@@ -2716,6 +2718,67 @@ namespace toy_mlp_fusion
 
             //return
             return flag;    
+        }
+
+        bool checkValidIntermediateBuffers(GBROps ops) const
+        {
+            //init
+            bool flag = true;
+            Value T1 = ops.gemmOp.getDpsInits()[0];
+            Value T2 = ops.biasOp.getDpsInits()[0];
+            if(!T1.getDefiningOp<memref::AllocOp>() || !T2.getDefiningOp<memref::AllocOp>())
+            {
+                return false;
+            }
+            
+            //check
+            /** check T1 */
+            SmallVector<Operation*> usersT1;
+            auto deallocT1Op = memref::findDealloc(T1);
+            if(!deallocT1Op)
+            {
+                return false;
+            }
+                
+            usersT1.push_back(*deallocT1Op);
+            usersT1.push_back(ops.gemmOp);
+            usersT1.push_back(ops.biasOp);
+            auto fillOp = dyn_cast_or_null<linalg::FillOp>(ops.gemmOp->getPrevNode());
+            if(!fillOp || fillOp.getDpsInits()[0] != T1)
+            {
+                return false;
+            }
+
+            usersT1.push_back(fillOp);
+
+            if(!hasOnlyExprectedUsers(T1, usersT1))
+            {
+                flag = false;
+                return flag;
+            }
+
+
+            /** check T2 */
+            SmallVector<Operation*> usersT2;
+            auto deallocT2Op = memref::findDealloc(T2);
+            if(!deallocT2Op)
+            {
+                return false;
+            }
+
+            usersT2.push_back(*deallocT2Op);
+            usersT2.push_back(ops.biasOp);
+            usersT2.push_back(ops.reluOp);
+            
+            if(!hasOnlyExprectedUsers(T2, usersT2))
+            {
+                flag = false;
+                return flag;
+            }
+
+            //return
+            return flag;
+
         }
 
         bool isMatchedOps(GBROps ops) const
