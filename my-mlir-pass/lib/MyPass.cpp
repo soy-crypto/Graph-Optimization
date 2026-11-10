@@ -2725,9 +2725,6 @@ namespace toy_mlp_fusion
 
         bool checkT2Buffer(Value T2, GBROps ops) const
         {
-            //init
-            bool flag = true;
-
             //check
             SmallVector<Operation*> usersT2;
             auto deallocT2Op = memref::findDealloc(T2);
@@ -2769,9 +2766,11 @@ namespace toy_mlp_fusion
         
         bool checkOutputBuffers(GBROps ops) const
         {
+            //check
+            
             return true;
         }
-        
+
         bool isMatchedOps(GBROps ops) const
         {
             //validity
