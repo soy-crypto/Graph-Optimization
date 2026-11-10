@@ -2766,8 +2766,33 @@ namespace toy_mlp_fusion
         
         bool checkOutputBuffers(GBROps ops) const
         {
-            //check
+            //init
+            auto reluOp = ops.reluOp;
+
+            //check if alocation op
+            Value H = ops.reluOp.getDpsInits()[0];
+            if(!H.getDefiningOp<memref::AllocOp>())
+            {
+                return false;
+            }
+
+            //check if there are valid users
+            bool flag = true;
+            for(Operation* user : H.getUsers())
+            {
+                if(user != reluOp || user->getBlock() != reluOp->getBlock() || !reluOp->isBeforeInBlock(user))
+                {
+                    flag = false;
+                    break;
+                }
+            }
+
+            if(!flag)
+            {
+                return false;
+            }
             
+            //return
             return true;
         }
 
