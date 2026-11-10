@@ -2782,13 +2782,13 @@ namespace toy_mlp_fusion
             {
                 if(user != reluOp)
                 {
-                    if(user->getBlock() != reluOp->getBlock() || !reluOp->isBeforeInBlock(user)))
+                    if(user->getBlock() != reluOp->getBlock() || !reluOp->isBeforeInBlock(user))
                     {
                         flag = false;
                         break;
                     }
                 }
-                
+
             }
 
             if(!flag)
