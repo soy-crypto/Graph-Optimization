@@ -2766,7 +2766,12 @@ namespace toy_mlp_fusion
             //return
             return flag;
         }
-
+        
+        bool checkOutputBuffers(GBROps ops) const
+        {
+            return true;
+        }
+        
         bool isMatchedOps(GBROps ops) const
         {
             //validity
@@ -2809,6 +2814,13 @@ namespace toy_mlp_fusion
             /** intermediate buffer checking */
             bool isValidIntermediateBuffers = checkIntermediateBuffers(ops);
             if(!isValidIntermediateBuffers)
+            {
+                return false;
+            }
+
+            /** output buffer checking */
+            bool isValidOutputBuffers = checkOutputBuffers(ops);
+            if(!isValidOutputBuffers)
             {
                 return false;
             }
@@ -2971,7 +2983,6 @@ namespace toy_mlp_fusion
         }
  
     };
-    
 }
 
 //Register
