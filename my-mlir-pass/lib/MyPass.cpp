@@ -2780,11 +2780,15 @@ namespace toy_mlp_fusion
             bool flag = true;
             for(Operation* user : H.getUsers())
             {
-                if(user != reluOp || user->getBlock() != reluOp->getBlock() || !reluOp->isBeforeInBlock(user))
+                if(user != reluOp)
                 {
-                    flag = false;
-                    break;
+                    if(user->getBlock() != reluOp->getBlock() || !reluOp->isBeforeInBlock(user)))
+                    {
+                        flag = false;
+                        break;
+                    }
                 }
+                
             }
 
             if(!flag)
