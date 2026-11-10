@@ -2971,6 +2971,7 @@ namespace toy_mlp_fusion
         }
  
     };
+    
 }
 
 //Register
