@@ -3037,7 +3037,6 @@ namespace attention_fusion
     //three patterns
 
 
-
     //pass
     struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
     {
