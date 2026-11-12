@@ -3017,9 +3017,22 @@ namespace attention_fusion
 {
     struct QKScaleOps
     {
-        linalg::GenericOp gemmop;
-        
-    }
+        linalg::GenericOp gemmOp;
+        linalg::GenericOp scaleOp;
+    };
+
+    struct ExpSumOps
+    {
+        linalg::GenericOp expOp;
+        linalg::GenericOp rowSumOp;
+    };
+
+    struct NormalizeGemmOps
+    {
+        linalg::GenericOp normalizeOp;
+        linalg::MatmulOp gemmOp;
+    };
+    
 }
 
 //Register
