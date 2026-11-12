@@ -3040,7 +3040,15 @@ namespace attention_fusion
     //pass
     struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
     {
+        MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(AttentionFusionPass);
 
+        StringRef getArgument() const override
+        {
+            return "toy-attention-fusion";
+        }
+
+        
+        
     };
     
 }
