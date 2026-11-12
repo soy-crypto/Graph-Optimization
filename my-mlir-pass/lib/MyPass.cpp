@@ -3035,7 +3035,12 @@ namespace attention_fusion
     };
 
     //three patterns
-
+    /** QKScale Pattern */
+    struct QKScalePattern : public OpRewritePattern<linalg::GenericOp>
+    {
+        using OpRewritePattern::OpRewritePattern;
+        
+    };
 
     //pass
     struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
@@ -3054,11 +3059,19 @@ namespace attention_fusion
 
         void runOnOperation() override
         {
-            
+            //init
+            RewritePatternSet patterns(&getContext());
+            patterns.add<attention_fusion::QKScalePattern>(&getContext());
+            FrozenRewritePatternSet frozen(std::move(patterns));
+
+            //apply
+            if(failed(applyPatternsGreedily(getOperation(), frozen)))
+            {
+                signalPassFailure();
+            }
+
         }
 
-        
-        
     };
     
 }
