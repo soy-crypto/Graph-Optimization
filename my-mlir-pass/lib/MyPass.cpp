@@ -3015,7 +3015,7 @@ namespace toy_mlp_fusion
 
 namespace attention_fusion
 {
-    //
+    //collected Ops
     struct QKScaleOps
     {
         linalg::GenericOp gemmOp;
