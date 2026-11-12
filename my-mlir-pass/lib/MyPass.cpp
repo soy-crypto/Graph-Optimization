@@ -1723,7 +1723,7 @@ namespace
                 return false;
             }
 
-            //check store op
+            //check store op0
             bool flag = false;
             if(storeOps[0].getValue() == lhs && storeOps[0].getMemref() == C && storeOps[0].getIndices()[0] == i && storeOps[0].getIndices()[1] == j)
             {
@@ -3011,6 +3011,15 @@ namespace toy_mlp_fusion
         }
  
     };
+}
+
+namespace attention_fusion
+{
+    struct QKScaleOps
+    {
+        linalg::GenericOp gemmop;
+        
+    }
 }
 
 //Register
