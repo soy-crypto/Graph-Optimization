@@ -3047,6 +3047,16 @@ namespace attention_fusion
             return "toy-attention-fusion";
         }
 
+        StringRef getDescription() const override
+        {
+            return "Fuse attention operations";
+        }
+
+        void runOnOperation() override
+        {
+            
+        }
+
         
         
     };
