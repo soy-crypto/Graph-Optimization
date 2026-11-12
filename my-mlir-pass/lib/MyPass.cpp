@@ -3040,6 +3040,18 @@ namespace attention_fusion
     {
         using OpRewritePattern::OpRewritePattern;
         
+        LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
+        {
+            //collect
+            
+            //validate
+
+            //rewrite
+
+            //return
+            return success();
+        }
+        
     };
 
     //pass
