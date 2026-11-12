@@ -3015,6 +3015,7 @@ namespace toy_mlp_fusion
 
 namespace attention_fusion
 {
+    //
     struct QKScaleOps
     {
         linalg::GenericOp gemmOp;
@@ -3031,6 +3032,16 @@ namespace attention_fusion
     {
         linalg::GenericOp normalizeOp;
         linalg::MatmulOp gemmOp;
+    };
+
+    //three patterns
+
+
+
+    //pass
+    struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
+    {
+
     };
     
 }
