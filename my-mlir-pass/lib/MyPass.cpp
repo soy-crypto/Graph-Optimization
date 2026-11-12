@@ -3043,10 +3043,21 @@ namespace attention_fusion
         LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter &rewriter) const override
         {
             //collect
+            QKScaleOps qksOps = collect(op);
             
             //validate
+            bool isValid = isMatchedOps(qksOps);
+            if(!isValid)
+            {
+                return failure();
+            }
 
             //rewrite
+            bool isRewritten = rewriteOp(qksOps, rewriter);
+            if(isRewritten)
+            {
+                return failure();
+            }
 
             //return
             return success();
