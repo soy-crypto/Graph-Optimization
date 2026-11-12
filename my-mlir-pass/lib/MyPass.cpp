@@ -3065,4 +3065,5 @@ void registerMyPass()
     //gemm, mlp, transformer
     PassRegistration<toy_shared_tile::ToySharedTilePass>();
     PassRegistration<toy_mlp_fusion::ToyFusionPass>();
+    PassRegistration<attention_fusion::AttentionFusionPass>();
 }
