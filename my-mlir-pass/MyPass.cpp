@@ -3138,7 +3138,19 @@ namespace attention_fusion
             return true;
         }
 
-        
+        bool checkGEMMBody(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            //get body
+            Block& block = op.getOperation()->getRegion(0).front();
+            
+        }
+
         bool checkGEMM(linalg::GenericOp op) const
         {
             //validity
