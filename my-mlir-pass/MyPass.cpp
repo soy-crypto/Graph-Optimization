@@ -3156,12 +3156,28 @@ namespace attention_fusion
             }
 
             auto f32 = Float32Type::get(op.getContext());
-            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType(2) != f32)
+            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType() != f32)
             {
                 return false;
             }
 
             /** check block body */
+            SmallVector<Operation*> ops;
+            for(Operation& op : block)
+            {
+                ops.push_back(&op);
+            }
+
+            if(ops.size() != 3)
+            {
+                return false;
+            }
+
+            auto mulOp   = dyn_cast_or_null<arith::MulFOp>(ops[0]);
+            auto addOp   = dyn_cast_or_null<arith::AddFOp>(ops[1]);
+            auto yieldOp = dyn_cast_or_null<scf::YieldOp>(ops[2]);
+
+
             
 
             //return
