@@ -3082,7 +3082,7 @@ namespace attention_fusion
             return flag1 && flag2 && flag3;
         }
 
-        bool checkScale(linalg::GenericOp op, Value Scores) const
+        bool checkScale(linalg::GenericOp op, Value scores) const
         {
             //validity
             if(!op)
@@ -3092,8 +3092,8 @@ namespace attention_fusion
             
             //check mapping
             bool flag1 = checkScaleapping(op);
-            bool flag2 = checkScaleHeadParameters(op);
-            bool flag3 = checkScaleBody(op);
+            bool flag2 = checkScaleHeadParameters(op, scores);
+            bool flag3 = checkScaleBody(op, scores);
 
             //return
             return flag1 && flag2 && flag3;
