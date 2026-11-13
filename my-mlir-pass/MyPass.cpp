@@ -3116,7 +3116,7 @@ namespace attention_fusion
             return true;
         }
 
-        bool checkGEMMHeadParameters(linalg::GenericOp op) const
+        bool checkGEMMHead(linalg::GenericOp op) const
         {
             //validity
             if(!op || op.getNumDpsInputs() != 2 || op.getNumDpsInits() != 1)
@@ -3155,10 +3155,10 @@ namespace attention_fusion
                 return false;
             }
 
-            auto f32 = Float32Type::get(op.getContext());
             Value q = block.getArgument(0);
             Value k = block.getArgument(1);
             Value acc = block.getArgument(2);
+            auto f32 = Float32Type::get(op.getContext());
             if(q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
             {
                 return false;
@@ -3176,11 +3176,23 @@ namespace attention_fusion
                 return false;
             }
 
-            auto mulOp   = dyn_cast_or_null<arith::MulFOp>(ops[0]);
-            auto addOp   = dyn_cast_or_null<arith::AddFOp>(ops[1]);
-            auto yieldOp = dyn_cast_or_null<scf::YieldOp>(ops[2]);
-            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != )
-            
+            auto mulOp = dyn_cast_or_null<arith::MulFOp>(ops[0]);
+            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != q || mulOp.getOperand(1) != k || mulOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto addOp = dyn_cast_or_null<arith::AddFOp>(ops[1]);
+            if(!addOp || addOp.getNumOperands() != 2 || addOp.getOperand(0) != acc || addOp.getOperand(1) != mulOp.getResult() || addOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto yieldOp = dyn_cast_or_null<linalg::YieldOp>(ops[2]);
+            if(!yieldOp || yieldOp.getNumOperands() != 1 || yieldOp.getOperand(0) != addOp.getResult())
+            {
+                return false;
+            }
 
             //return
             return true;
@@ -3197,7 +3209,7 @@ namespace attention_fusion
             //check mapping
             bool flag1 = checkGEMMMapping(op);
             bool flag2 = checkGEMMIterator(op);
-            bool flag3 = checkGEMMHeadParameters(op);
+            bool flag3 = checkGEMMHead(op);
             bool flag4 = checkGEMMBody(op);
 
             //return
