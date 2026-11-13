@@ -3065,6 +3065,20 @@ namespace attention_fusion
         }
         
         //matched
+        bool checkGEMMMapping(linalg::GenericOp op) const
+        {
+            //#q_map, #k_map, #score_map
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto k = getAffineDimExpr(2, ctx);
+            auto expectedQMap = AffineMap::get(3, 0, {i, k}, ctx);
+            auto expectedKMap = AffineMap::get(3, 0, {j, k}, ctx);
+            auto expectedScoresMap = AffineMap::get(3, 0, {i, j}, ctx);
+
+            //
+        }
+
         bool checkGEMM(linalg::GenericOp op) const
         {
             //validity
@@ -3075,8 +3089,9 @@ namespace attention_fusion
 
             //check mapping
             bool flag1 = checkGEMMMapping(op);
-            bool flag2 = checkGEMMHeadParameters(op);
-            bool flag3 = checkGEMMBody(op);
+            bool flag2 = checkGEMMIterator(op);
+            bool flag3 = checkGEMMHeadParameters(op);
+            bool flag4 = checkGEMMBody(op);
 
             //return
             return flag1 && flag2 && flag3;
