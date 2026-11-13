@@ -3324,6 +3324,24 @@ namespace attention_fusion
             return true;
         }
 
+        Value getScore(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return {};
+            }    
+
+            //get score
+            auto func = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!func || func.getBody().empty())
+            {
+                return {};
+            }
+
+            Block& block = func.
+        }
+
         bool checkScale(linalg::GenericOp op, Value scores, Value score) const
         {
             //validity
@@ -3336,7 +3354,7 @@ namespace attention_fusion
             bool flag1 = checkScaleMapping(op);
             bool flag2 = checkScaleIterator(op);
             bool flag3 = checkScaleHead(op, scores);
-            bool flag4 = checkScaleBody(op, score);
+            bool flag4 = checkScaleBody(op, getScore(op));
 
             //return
             return flag1 && flag2 && flag3;
