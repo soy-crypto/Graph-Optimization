@@ -3067,6 +3067,12 @@ namespace attention_fusion
         //matched
         bool checkGEMMMapping(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
             //#q_map, #k_map, #score_map
             auto* ctx = op.getContext();
             auto i = getAffineDimExpr(0, ctx);
@@ -3094,6 +3100,12 @@ namespace attention_fusion
 
         bool checkGEMMIterator(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
             auto iterators = op.getIteratorTypesArray();
             if(iterators.size() != 3 || 
                 iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel || iterators[2] != utils::IteratorType::reduction)
@@ -3106,9 +3118,27 @@ namespace attention_fusion
 
         bool checkGEMMHeadParameters(linalg::GenericOp op) const
         {
-            
+            //validity
+            if(!op || op.getNumDpsInputs() != 2 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            //get head
+            Value Q = op.getDpsInputs()[0];
+            Value K = op.getDpsInputs()[1];
+            Value scores = op.getDpsInits()[0];
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext()));
+            if(Q.getType() != expectedType || K.getType() != expectedType || scores.getType() != expectedType)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
+        
         bool checkGEMM(linalg::GenericOp op) const
         {
             //validity
