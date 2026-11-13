@@ -3072,7 +3072,7 @@ namespace attention_fusion
             {
                 return false;
             }
-            
+
             //check mapping
             bool flag1 = checkGEMMMapping(op);
             bool flag2 = checkGEMMHeadParameters(op);
@@ -3084,7 +3084,19 @@ namespace attention_fusion
 
         bool checkScale(linalg::GenericOp op, Value Scores) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+            
+            //check mapping
+            bool flag1 = checkScaleapping(op);
+            bool flag2 = checkScaleHeadParameters(op);
+            bool flag3 = checkScaleBody(op);
 
+            //return
+            return flag1 && flag2 && flag3;
         }
 
         bool isMatchedOps(QKScaleOps ops) const
