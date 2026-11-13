@@ -3333,13 +3333,26 @@ namespace attention_fusion
             }    
 
             //get score
-            auto func = op.getOperation()->getParentOfType<func::FuncOp>();
-            if(!func || func.getBody().empty())
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!attentionOp || attentionOp.getBody().empty())
             {
                 return {};
             }
 
-            Block& block = func.
+            Block& entry = attentionOp.getOperation()->getRegion(0).front();
+            if(entry.empty())
+            {
+                return {};
+            }
+
+            auto scaleOp = dyn_cast_if_present<arith::ConstantOp>(entry.front().getNextNode());
+            if(!scaleOp)
+            {
+                return {};
+            }
+
+            //return
+            return scaleOp.getResult();
         }
 
         bool checkScale(linalg::GenericOp op, Value scores, Value score) const
