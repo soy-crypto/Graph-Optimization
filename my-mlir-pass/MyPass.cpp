@@ -3278,7 +3278,7 @@ namespace attention_fusion
             return true;
         }
 
-        bool checkScaleBody(linalg::GenericOp op) const
+        bool checkScaleBody(linalg::GenericOp op, Value score) const
         {
             //validity
             if(!op)
@@ -3300,14 +3300,31 @@ namespace attention_fusion
             SmallVector<Operation*> ops;
             for(Operation& op : block.getOperations())
             {
-                
+                ops.push_back(&op);
+            }
+
+            if(ops.size() != 2)
+            {
+                return false;
+            }
+
+            auto mulOp = dyn_cast_if_present<arith::MulFOp>(ops[0]);
+            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != block.getArgument(0) || mulOp.getOperand(1) != score || mulOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(ops[1]);
+            if(!yieldOp || yieldOp.getNumOperands() != 1 || yieldOp.getOperand(0) != mulOp.getResult())
+            {
+                return false;
             }
 
             //return
             return true;
         }
 
-        bool checkScale(linalg::GenericOp op, Value scores) const
+        bool checkScale(linalg::GenericOp op, Value scores, Value score) const
         {
             //validity
             if(!op)
@@ -3319,7 +3336,7 @@ namespace attention_fusion
             bool flag1 = checkScaleMapping(op);
             bool flag2 = checkScaleIterator(op);
             bool flag3 = checkScaleHead(op, scores);
-            bool flag4 = checkScaleBody(op);
+            bool flag4 = checkScaleBody(op, score);
 
             //return
             return flag1 && flag2 && flag3;
