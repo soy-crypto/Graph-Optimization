@@ -3148,7 +3148,21 @@ namespace attention_fusion
 
             //get body
             Block& block = op.getOperation()->getRegion(0).front();
+            if(block.getNumArguments() != 3)
+            {
+                return false;
+            }
+
+            auto f32 = Float32Type::get(op.getContext());
+            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType() != f32)
+            {
+                return false;
+            }
+
             
+            
+
+
         }
 
         bool checkGEMM(linalg::GenericOp op) const
