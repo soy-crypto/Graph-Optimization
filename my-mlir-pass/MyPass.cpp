@@ -3096,7 +3096,7 @@ namespace attention_fusion
         {
             auto iterators = op.getIteratorTypesArray();
             if(iterators.size() != 3 || 
-                iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel || iterators[2] ! = utils::IteratorType::parallel)
+                iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel || iterators[2] != utils::IteratorType::reduction)
             {
                 return false;
             }
