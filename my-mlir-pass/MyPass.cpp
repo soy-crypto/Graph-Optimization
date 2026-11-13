@@ -3104,6 +3104,11 @@ namespace attention_fusion
             return true;
         }
 
+        bool checkGEMMHeadParameters(linalg::GenericOp op) const
+        {
+            
+        }
+
         bool checkGEMM(linalg::GenericOp op) const
         {
             //validity
