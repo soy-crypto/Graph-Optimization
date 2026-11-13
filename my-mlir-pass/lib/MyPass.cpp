@@ -3067,12 +3067,19 @@ namespace attention_fusion
         //matched
         bool checkGEMM(linalg::GenericOp op) const
         {
-            
+            //check mapping
+
+
+            //check head parameters
+
+            //check body ops
+
+            //check yield op
         }
 
-        bool checkScale(linalg::GenericOp op) const
+        bool checkScale(linalg::GenericOp op, Value Scores) const
         {
-            
+
         }
 
         bool isMatchedOps(QKScaleOps ops) const
@@ -3084,7 +3091,7 @@ namespace attention_fusion
             }
 
             //check
-            bool flag = checkGEMM(ops.gemmOp) && checkScale(ops.scaleOp);
+            bool flag = checkGEMM(ops.gemmOp) && checkScale(ops.scaleOp, ops.gemmOp.getDpsInits()[0]);
 
             //return
             return flag;
