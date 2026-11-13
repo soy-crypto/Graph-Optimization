@@ -3092,6 +3092,17 @@ namespace attention_fusion
             return true;
         }
 
+        bool checkGEMMIterator(linalg::GenericOp op) const
+        {
+            auto iterators = op.getIteratorTypesArray();
+            if(iterators.size() != 3 || iterators[0] != "parallel" || iterators[1] != "parallel" || iterators[2] ! ="reduction")
+            {
+                return false;
+            }
+            
+            return true;
+        }
+
         bool checkGEMM(linalg::GenericOp op) const
         {
             //validity
