@@ -3146,16 +3146,11 @@ namespace attention_fusion
             Block& block = op.getOperation()->getRegion(0).front();
             
             /** check block head */
-            if(block.getNumArguments() != 3)
-            {
-                return false;
-            }
-
+            auto f32 = Float32Type::get(op.getContext());
             Value q = block.getArgument(0);
             Value k = block.getArgument(1);
             Value acc = block.getArgument(2);
-            auto f32 = Float32Type::get(op.getContext());
-            if(q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
+            if(block.getNumArguments() != 3 || q.getType() ! =f32 || k.getType() != f32 || acc.getType() != f32)
             {
                 return false;
             }
@@ -3285,7 +3280,22 @@ namespace attention_fusion
 
         bool checkScaleBody(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
 
+            //body
+            Block& block = op.getOperation()->getRegion(0).front();
+            auto f32 = Float32Type::get(op.getContext());
+            if(block.getNumArguments() != 2 || block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32)
+            {
+                return false;
+            } 
+
+            //return
+            return true;
         }
 
         bool checkScale(linalg::GenericOp op, Value scores) const
