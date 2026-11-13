@@ -3065,6 +3065,7 @@ namespace attention_fusion
         }
         
         //matched
+        /** GEMM checking */
         bool checkGEMMMapping(linalg::GenericOp op) const
         {
             //validity
@@ -3215,6 +3216,27 @@ namespace attention_fusion
             //return
             return flag1 && flag2 && flag3;
         }
+        
+        /** Scale checking */
+        bool checkScaleMapping(linalg::GenericOp op) const
+        {
+
+        }
+
+        bool checkScaleIterator(linalg::GenericOp op) const
+        {
+
+        }
+
+        bool checkScaleHead(linalg::GenericOp op, Value scores) const
+        {
+            
+        }
+
+        bool checkScaleBody(linalg::GenericOp op) const
+        {
+
+        }
 
         bool checkScale(linalg::GenericOp op, Value scores) const
         {
@@ -3225,9 +3247,10 @@ namespace attention_fusion
             }
             
             //check mapping
-            bool flag1 = checkScaleapping(op);
-            bool flag2 = checkScaleHeadParameters(op, scores);
-            bool flag3 = checkScaleBody(op);
+            bool flag1 = checkScaleMapping(op);
+            bool flag2 = checkScaleIterator(op);
+            bool flag3 = checkScaleHead(op, scores);
+            bool flag4 = checkScaleBody(op);
 
             //return
             return flag1 && flag2 && flag3;
