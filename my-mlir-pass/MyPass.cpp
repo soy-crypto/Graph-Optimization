@@ -3085,12 +3085,7 @@ namespace attention_fusion
 
             //check
             auto maps = op.getIndexingMapsArray();
-            if(maps.size() != 3)
-            {
-                return false;
-            }
-
-            if(maps[0] != expectedQMap || maps[1] != expectedKMap || maps[2] != expectedScoresMap)
+            if(maps.size() != 3|| maps[0] != expectedQMap || maps[1] != expectedKMap || maps[2] != expectedScoresMap)
             {
                 return false;
             }
@@ -3220,17 +3215,72 @@ namespace attention_fusion
         /** Scale checking */
         bool checkScaleMapping(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
 
+            //expected mapping
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto expectedMatrix = AffineMap::get(2, 0, {i, j}, ctx);
+
+            //check
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 2 || maps[0] != expectedMatrix || maps[1] != expectedMatrix)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
         bool checkScaleIterator(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
 
+            //iterator
+            auto iterator = op.getIteratorTypesArray();
+            if(iterator.size() != 2 || iterator[0] != utils::IteratorType::parallel || iterator[1] != utils::IteratorType::parallel)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
-        bool checkScaleHead(linalg::GenericOp op, Value scores) const
+        bool checkScaleHead(linalg::GenericOp op, Value expectedScores) const
         {
-            
+            //validity
+            if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            //head
+            Value scores = op.getDpsInputs()[0];
+            if(scores != expectedScores)
+            {
+                return false;
+            }
+
+            Value scaled = op.getDpsInits()[0];
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext()));
+            if(scaled.getType() != expectedType)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
         bool checkScaleBody(linalg::GenericOp op) const
