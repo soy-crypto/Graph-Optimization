@@ -3150,14 +3150,14 @@ namespace attention_fusion
             Value q = block.getArgument(0);
             Value k = block.getArgument(1);
             Value acc = block.getArgument(2);
-            if(block.getNumArguments() != 3 || q.getType() ! =f32 || k.getType() != f32 || acc.getType() != f32)
+            if(block.getNumArguments() != 3 || q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
             {
                 return false;
             }
 
             /** check block body */
             SmallVector<Operation*> ops;
-            for(Operation& op : block)
+            for(Operation& op : block.getOperations())
             {
                 ops.push_back(&op);
             }
@@ -3288,11 +3288,20 @@ namespace attention_fusion
 
             //body
             Block& block = op.getOperation()->getRegion(0).front();
+
+            /** check block head */
             auto f32 = Float32Type::get(op.getContext());
             if(block.getNumArguments() != 2 || block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32)
             {
                 return false;
             } 
+
+            /** check block body */
+            SmallVector<Operation*> ops;
+            for(Operation& op : block.getOperations())
+            {
+                
+            }
 
             //return
             return true;
