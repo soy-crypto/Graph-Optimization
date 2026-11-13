@@ -3355,7 +3355,7 @@ namespace attention_fusion
             return scaleOp.getResult();
         }
 
-        bool checkScale(linalg::GenericOp op, Value scores, Value score) const
+        bool checkScale(linalg::GenericOp op, Value scores) const
         {
             //validity
             if(!op)
