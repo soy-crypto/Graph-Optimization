@@ -3065,12 +3065,12 @@ namespace attention_fusion
         }
         
         //matched
-        bool checkGEMM() const
+        bool checkGEMM(linalg::GenericOp op) const
         {
             
         }
 
-        bool checkScale() const
+        bool checkScale(linalg::GenericOp op) const
         {
             
         }
