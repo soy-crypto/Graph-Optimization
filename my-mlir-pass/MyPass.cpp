@@ -3095,7 +3095,8 @@ namespace attention_fusion
         bool checkGEMMIterator(linalg::GenericOp op) const
         {
             auto iterators = op.getIteratorTypesArray();
-            if(iterators.size() != 3 || iterators[0] != "parallel" || iterators[1] != "parallel" || iterators[2] ! ="reduction")
+            if(iterators.size() != 3 || 
+                iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel || iterators[2] ! = utils::IteratorType::parallel)
             {
                 return false;
             }
