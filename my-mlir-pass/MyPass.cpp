@@ -3156,7 +3156,10 @@ namespace attention_fusion
             }
 
             auto f32 = Float32Type::get(op.getContext());
-            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType() != f32)
+            Value q = block.getArgument(0);
+            Value k = block.getArgument(1);
+            Value acc = block.getArgument(2);
+            if(q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
             {
                 return false;
             }
@@ -3176,8 +3179,7 @@ namespace attention_fusion
             auto mulOp   = dyn_cast_or_null<arith::MulFOp>(ops[0]);
             auto addOp   = dyn_cast_or_null<arith::AddFOp>(ops[1]);
             auto yieldOp = dyn_cast_or_null<scf::YieldOp>(ops[2]);
-
-
+            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != )
             
 
             //return
