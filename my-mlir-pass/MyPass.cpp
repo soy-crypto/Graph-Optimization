@@ -3076,7 +3076,14 @@ namespace attention_fusion
             auto expectedKMap = AffineMap::get(3, 0, {j, k}, ctx);
             auto expectedScoresMap = AffineMap::get(3, 0, {i, j}, ctx);
 
-            //
+            //check
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 3)
+            {
+                return false;
+            }
+
+            s
         }
 
         bool checkGEMM(linalg::GenericOp op) const
