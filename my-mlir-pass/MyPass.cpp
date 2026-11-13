@@ -3093,7 +3093,7 @@ namespace attention_fusion
             //check mapping
             bool flag1 = checkScaleapping(op);
             bool flag2 = checkScaleHeadParameters(op, scores);
-            bool flag3 = checkScaleBody(op, scores);
+            bool flag3 = checkScaleBody(op);
 
             //return
             return flag1 && flag2 && flag3;
