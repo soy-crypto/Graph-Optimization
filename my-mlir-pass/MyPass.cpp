@@ -3067,13 +3067,19 @@ namespace attention_fusion
         //matched
         bool checkGEMM(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+            
             //check mapping
+            bool flag1 = checkGEMMMapping(op);
+            bool flag2 = checkGEMMHeadParameters(op);
+            bool flag3 = checkGEMMBody(op);
 
-            //check head parameters
-
-            //check body ops
-
-            //check yield op
+            //return
+            return flag1 && flag2 && flag3;
         }
 
         bool checkScale(linalg::GenericOp op, Value Scores) const
