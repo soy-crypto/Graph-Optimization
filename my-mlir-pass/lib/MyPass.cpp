@@ -3039,17 +3039,44 @@ namespace attention_fusion
     struct QKScalePattern : public OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
-
+        
+        //collect two generic ops
         QKScaleOps collectOps(linalg::GenericOp op) const
         {
-            return QKScaleOps{};
-        }
+            //validity
+            if(!op)
+            {
+                return QKScaleOps{};
+            }
 
+            //init
+            QKScaleOps qksOps;
+            auto prevOp = dyn_cast_or_null<linalg::GenericOp>(op->getPrevNode());
+            if(!prevOp)
+            {
+                return QKScaleOps{};
+            }
+
+            qksOps.gemmOp = prevOp;
+            qksOps.scaleOp = op;
+
+            //return
+            return qksOps;
+        }
+        
+        //matched
         bool isMatchedOps(QKScaleOps ops) const
         {
+            //validity
+            if(!ops.gemmOp || !ops.scaleOp)
+            {
+                return false;
+            }
+
             return true;
         }
 
+        //rewrite 
         bool rewriteOps(QKScaleOps, PatternRewriter &rewriter) const
         {
             return true;
