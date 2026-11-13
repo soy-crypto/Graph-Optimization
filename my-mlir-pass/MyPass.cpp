@@ -3051,7 +3051,7 @@ namespace attention_fusion
 
             //init
             QKScaleOps qksOps;
-            auto prevOp = dyn_cast_or_null<linalg::GenericOp>(op->getPrevNode());
+            auto prevOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
             if(!prevOp)
             {
                 return QKScaleOps{};
