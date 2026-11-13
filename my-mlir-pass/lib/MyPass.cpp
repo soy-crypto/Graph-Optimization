@@ -3065,6 +3065,16 @@ namespace attention_fusion
         }
         
         //matched
+        bool checkGEMM() const
+        {
+            
+        }
+
+        bool checkScale() const
+        {
+            
+        }
+
         bool isMatchedOps(QKScaleOps ops) const
         {
             //validity
@@ -3073,7 +3083,11 @@ namespace attention_fusion
                 return false;
             }
 
-            return true;
+            //check
+            bool flag = checkGEMM(ops.gemmOp) && checkScale(ops.scaleOp);
+
+            //return
+            return flag;
         }
 
         //rewrite 
