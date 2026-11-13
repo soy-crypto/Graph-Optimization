@@ -3083,7 +3083,13 @@ namespace attention_fusion
                 return false;
             }
 
-            s
+            if(maps[0] != expectedQMap || maps[1] != expectedKMap || maps[2] != expectedScoresMap)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
         bool checkGEMM(linalg::GenericOp op) const
