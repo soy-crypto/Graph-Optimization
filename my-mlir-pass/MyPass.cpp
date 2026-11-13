@@ -3148,21 +3148,24 @@ namespace attention_fusion
 
             //get body
             Block& block = op.getOperation()->getRegion(0).front();
+            
+            /** check block head */
             if(block.getNumArguments() != 3)
             {
                 return false;
             }
 
             auto f32 = Float32Type::get(op.getContext());
-            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType() != f32)
+            if(block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32 || block.getArgument(2).getType(2) != f32)
             {
                 return false;
             }
 
-            
+            /** check block body */
             
 
-
+            //return
+            return true;
         }
 
         bool checkGEMM(linalg::GenericOp op) const
