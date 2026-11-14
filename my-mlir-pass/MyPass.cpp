@@ -3110,6 +3110,48 @@ namespace attention_fusion
             return true;
         }
 
+        bool checkScoresZeroFilling(linalg::FillOp op, Value zero, Value S) const
+        {
+            //validity
+            if(!S || !op)
+            {
+                return false;
+            }
+
+            //init
+           
+            if(!op || op.getNumDpsInputs()[0] != zero || op.getNumDpsInputs()[1] != S)
+            {
+                
+            }
+        }
+
+        Value getFirstZero(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return {};
+            }
+
+            //init
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            Block& entry = attentionOp.getOperation()->getRegion(0).front();
+            if(entry.empty())
+            {
+                return {};
+            }
+
+            auto zeroOp = dyn_cast_if_present<arith::ConstantOp>(entry.front());
+            if(!zeroOp)
+            {
+                return {};
+            }
+
+            //return
+            return zeroOp.getResult();
+        }
+        
         bool checkGEMMHead(linalg::GenericOp op) const
         {
             //validity
@@ -3129,10 +3171,13 @@ namespace attention_fusion
                 return false;
             }
 
-            /** zero filling checking */
-            
-
-            
+            /** scores zero filling checking */
+            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op);
+            Value zero = getFirstZero(op);
+            if(!checkScoresZeroFilling(fillOp, zero, scores))
+            {
+                return false;
+            }
 
             //return
             return true;
