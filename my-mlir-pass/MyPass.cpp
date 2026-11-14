@@ -3387,6 +3387,13 @@ namespace attention_fusion
         }
 
         //Rewrite 
+        /** clone original ops */
+        Value cloneBody(linalg::GenericOp op) const
+        {
+            
+        }
+
+        /** rewrite */
         bool rewriteOps(QKScaleOps ops, PatternRewriter &rewriter) const
         {
             //validity
