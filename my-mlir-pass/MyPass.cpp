@@ -3038,7 +3038,7 @@ namespace attention_fusion
     {
         using OpRewritePattern::OpRewritePattern;
         
-        //Collect two generic ops
+        //Collect
         QKScaleOps collectOps(linalg::GenericOp op) const
         {
             //validity
@@ -3062,7 +3062,7 @@ namespace attention_fusion
             return qksOps;
         }
         
-        //Matched
+        //Match
         /** GEMM checking */
         bool checkGEMMMapping(linalg::GenericOp op) const
         {
@@ -3388,7 +3388,7 @@ namespace attention_fusion
 
         //Rewrite 
         /** clone original ops */
-        Value cloneBody(linalg::GenericOp op) const
+        Value cloneBody(QKScaleOps op) const
         {
             //validity
             if(!op.gemmOp)
@@ -3397,6 +3397,7 @@ namespace attention_fusion
             }
 
             //init
+            
             
         }
 
