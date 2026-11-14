@@ -3371,6 +3371,7 @@ namespace attention_fusion
             return flag1 && flag2 && flag3;
         }
 
+        /** final chekcing */
         bool isMatchedOps(QKScaleOps ops) const
         {
             //validity
@@ -3397,7 +3398,7 @@ namespace attention_fusion
             }
 
             //init
-            
+
             
         }
 
