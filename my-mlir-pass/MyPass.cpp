@@ -3433,15 +3433,43 @@ namespace attention_fusion
             //init
             auto gemmOp = ops.gemmOp;
             auto scaleOp = ops.scaleOp;
+            Block& gemmBlock = gemmOp.getOperation()->getRegion(0).front();
+            Block& scaleBlock = scaleOp.getOperation()->getRegion(0).front();
             Value Q = gemmOp.getDpsInputs()[0];
             Value K = gemmOp.getDpsInputs()[1];
             Value S = scaleOp.getDpsInits()[0];
-            
+
             //rewrite
+            auto loc = gemmOp.getLoc();
+            rewriter.setInsertionPoint(gemmOp);
             
+            /** nested loop head*/
+            Value c0 = rewriter.create<arith::ConstantOp>(loc, 0);
+            Value c64 = rewriter.create<arith::ConstantOp>(loc, 64);
+            Value c1 = rewriter.create<arith::ConstantOp>(loc, 1);
+            auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(iLoop.getBody());
+            auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(jLoop.getBody());
+            
+            /** loop body */
+            
+            /** loop entry */
+            Value i = iLoop.getInductionVar();
+            Value j = jLoop.getInductionVar();
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
 
-
-
+            /** k loop */
+            auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange(zero));
+            rewriter.setInsertionPointToStart(kLoop.getBody());
+            
+            /** k loop body */
+            Value k = kLoop.getInductionVar();
+            Value a = rewriter.create<memref::LoadOp>(loc, Q, RangeValue{i, k});
+            Value b = rewriter.create<memref::LoadOp>(loc, K, RangeValue{j, k});
+            
+            
+            Value product = cloneBody(gemmBlock, {a, b, });
 
 
             //return
