@@ -3416,6 +3416,7 @@ namespace attention_fusion
             }
 
             Value result = mapping.lookupOrDefault(yieldOp.getOperand(0));
+            rewriter.create<scf::YieldOp>();
 
             //return
             return result;
