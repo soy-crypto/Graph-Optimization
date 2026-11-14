@@ -3040,7 +3040,7 @@ namespace attention_fusion
     {
         using OpRewritePattern::OpRewritePattern;
         
-        //collect two generic ops
+        //Collect two generic ops
         QKScaleOps collectOps(linalg::GenericOp op) const
         {
             //validity
@@ -3064,7 +3064,7 @@ namespace attention_fusion
             return qksOps;
         }
         
-        //matched
+        //Matched
         /** GEMM checking */
         bool checkGEMMMapping(linalg::GenericOp op) const
         {
@@ -3388,7 +3388,7 @@ namespace attention_fusion
             return flag;
         }
 
-        //rewrite 
+        //Rewrite 
         bool rewriteOps(QKScaleOps, PatternRewriter &rewriter) const
         {
             return true;
@@ -3456,6 +3456,26 @@ namespace attention_fusion
     };
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Register
 void registerMyPass()
