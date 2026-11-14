@@ -3401,7 +3401,7 @@ namespace attention_fusion
             IRMapping mapping;
             for(unsigned i = 0; i < arguments.size(); i++)
             {
-                mapping.map(block.getArgument(0), arguments[i]);
+                mapping.map(block.getArgument(i), arguments[i]);
             }
 
             for(Operation& op : block.without_terminator())
@@ -3416,8 +3416,6 @@ namespace attention_fusion
             }
 
             Value result = mapping.lookupOrDefault(yieldOp.getOperand(0));
-            rewriter.create<scf::YieldOp>(op.location, result);
-
             //return
             return result;
         }
