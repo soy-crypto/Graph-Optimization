@@ -3430,8 +3430,19 @@ namespace attention_fusion
                 return false;
             }
 
+            //init
+            auto gemmOp = ops.gemmOp;
+            auto scaleOp = ops.scaleOp;
+            Value Q = gemmOp.getDpsInputs()[0];
+            Value K = gemmOp.getDpsInputs()[1];
+            Value S = scaleOp.getDpsInits()[0];
+            
             //rewrite
             
+
+
+
+
 
             //return
             return true;
