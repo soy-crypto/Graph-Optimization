@@ -3389,16 +3389,18 @@ namespace attention_fusion
 
         //Rewrite 
         /** clone original ops */
-        Value cloneBody(QKScaleOps op) const
+        Value cloneBody(Block& block) const
         {
             //validity
-            if(!op.gemmOp)
+            if(block.empty())
             {
                 return {};
             }
 
             //init
-
+            IRMapping mapping;
+            mapping.
+            
             
         }
 
