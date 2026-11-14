@@ -3119,6 +3119,7 @@ namespace attention_fusion
             }
 
             //get head
+            /** type checking */
             Value Q = op.getDpsInputs()[0];
             Value K = op.getDpsInputs()[1];
             Value scores = op.getDpsInits()[0];
@@ -3127,6 +3128,11 @@ namespace attention_fusion
             {
                 return false;
             }
+
+            /** zero filling checking */
+            
+
+            
 
             //return
             return true;
