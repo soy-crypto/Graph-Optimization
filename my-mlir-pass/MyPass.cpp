@@ -3389,7 +3389,7 @@ namespace attention_fusion
 
         //Rewrite 
         /** clone original ops */
-        Value cloneBody(Block& block, ValueRange arguments, PatternRewriter& rewrite) const
+        Value cloneBody(Block& block, ValueRange arguments, PatternRewriter& rewriter) const
         {
             //validity
             if(block.empty())
@@ -3404,7 +3404,21 @@ namespace attention_fusion
                 mapping.map(block.getArgument(0), arguments[i]);
             }
 
-            
+            for(Operation& op : block.without_terminator())
+            {
+                rewriter.clone(op, mapping);
+            }
+
+            auto yieldOp = dyn_cast_if_present<scf::YieldOp>(block.getTerminator());
+            if(!yieldOp)
+            {
+                return {};
+            }
+
+            Value result = mapping.lookupOrDefault(yieldOp.getOperand(0));
+
+            //return
+            return result;
         }
 
         /** rewrite */
