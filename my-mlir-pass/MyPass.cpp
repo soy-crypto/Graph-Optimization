@@ -3180,9 +3180,9 @@ namespace attention_fusion
             }
 
             /** scores zero filling checking */
-            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op);
+            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op.getOperation()->getPrevNode());
             Value zero = getFirstZero(op);
-            if(!checkScoresZeroFilling(fillOp, zero, scores))
+            if(!zero || !checkScoresZeroFilling(fillOp, zero, scores))
             {
                 return false;
             }
