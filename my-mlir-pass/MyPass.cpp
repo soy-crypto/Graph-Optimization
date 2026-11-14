@@ -3390,6 +3390,13 @@ namespace attention_fusion
         /** clone original ops */
         Value cloneBody(linalg::GenericOp op) const
         {
+            //validity
+            if(!op.gemmOp)
+            {
+                return {};
+            }
+
+            //init
             
         }
 
@@ -3471,6 +3478,7 @@ namespace attention_fusion
     };
     
 }
+
 
 
 
