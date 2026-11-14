@@ -3119,8 +3119,8 @@ namespace attention_fusion
             }
 
             //init
-           
-            if(!op || op.getNumDpsInputs()[0] != zero || op.getNumDpsInputs()[1] != S)
+            
+            if(!op || op.getNumOperands() != 2 || op.getNumDpsInputs()[0] != zero || op.getNumDpsInits()[0] != S)
             {
                 
             }
