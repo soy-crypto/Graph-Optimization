@@ -3119,11 +3119,13 @@ namespace attention_fusion
             }
 
             //init
-            
             if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1 || op.getDpsInputs()[0] != zero || op.getDpsInits()[0] != S)
             {
-                
+                return false;
             }
+
+            //return
+            return false;
         }
 
         Value getFirstZero(linalg::GenericOp op) const
