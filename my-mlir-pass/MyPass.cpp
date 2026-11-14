@@ -3125,7 +3125,7 @@ namespace attention_fusion
             }
 
             //return
-            return false;
+            return true;
         }
 
         Value getFirstZero(linalg::GenericOp op) const
@@ -3150,8 +3150,14 @@ namespace attention_fusion
                 return {};
             }
 
+            Value result = zeroOp.getResult();
+            if(!result.getType().isF32() || !matchPattern(result, m_PosZeroFloat()))
+            {
+                return {};
+            }
+
             //return
-            return zeroOp.getResult();
+            return result;
         }
         
         bool checkGEMMHead(linalg::GenericOp op) const
