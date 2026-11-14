@@ -3389,7 +3389,7 @@ namespace attention_fusion
 
         //Rewrite 
         /** clone original ops */
-        Value cloneBody(Block& block) const
+        Value cloneBody(Block& block, ValueRange arguments, PatternRewriter& rewrite) const
         {
             //validity
             if(block.empty())
@@ -3399,8 +3399,11 @@ namespace attention_fusion
 
             //init
             IRMapping mapping;
-            mapping.
-            
+            for(unsigned i = 0; i < arguments.size(); i++)
+            {
+                mapping.map(block.getArgument(0), arguments[i]);
+            }
+
             
         }
 
