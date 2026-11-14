@@ -3435,40 +3435,46 @@ namespace attention_fusion
             auto scaleOp = ops.scaleOp;
             Block& gemmBlock = gemmOp.getOperation()->getRegion(0).front();
             Block& scaleBlock = scaleOp.getOperation()->getRegion(0).front();
-            Value Q = gemmOp.getDpsInputs()[0];
-            Value K = gemmOp.getDpsInputs()[1];
-            Value S = scaleOp.getDpsInits()[0];
-
-            //rewrite
+            Value Q  = gemmOp.getDpsInputs()[0];
+            Value K  = gemmOp.getDpsInputs()[1];
+            Value S  = scaleOp.getDpsInits()[0];
             auto loc = gemmOp.getLoc();
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+            Value unused = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+
+            //rewriter
+            /** inserstion positon */
             rewriter.setInsertionPoint(gemmOp);
-            
-            /** nested loop head*/
-            Value c0 = rewriter.create<arith::ConstantOp>(loc, 0);
+
+            /** constants */
+            Value c0  = rewriter.create<arith::ConstantOp>(loc, 0);
             Value c64 = rewriter.create<arith::ConstantOp>(loc, 64);
-            Value c1 = rewriter.create<arith::ConstantOp>(loc, 1);
+            Value c1  = rewriter.create<arith::ConstantOp>(loc, 1);
+            
+            /** head */
             auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
             rewriter.setInsertionPointToStart(iLoop.getBody());
             auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
             rewriter.setInsertionPointToStart(jLoop.getBody());
-            
-            /** loop body */
-            
-            /** loop entry */
-            Value i = iLoop.getInductionVar();
-            Value j = jLoop.getInductionVar();
-            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
-
+        
             /** k loop */
             auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange(zero));
             rewriter.setInsertionPointToStart(kLoop.getBody());
             
             /** k loop body */
-            Value k = kLoop.getInductionVar();
-            Value a = rewriter.create<memref::LoadOp>(loc, Q, ValueRange{i, k});
-            Value b = rewriter.create<memref::LoadOp>(loc, K, ValueRange{j, k});            
+            Value a = rewriter.create<memref::LoadOp>(loc, Q, ValueRange{iLoop.getInductionVar(), kLoop.getInductionVar()});
+            Value b = rewriter.create<memref::LoadOp>(loc, K, ValueRange{jLoop.getInductionVar(), kLoop.getInductionVar()});            
             Value sum = cloneBody(gemmBlock, {a, b, jLoop.getRegionIterArg(0)}, rewriter);
+            rewriter.create<scf::YieldOp>(loc, sum);
+            rewriter.setInsertionPointAfter(kLoop);
 
+            /** outside k loop */
+            Value scaled = cloneBody(scaleBlock, {kLoop.getResult(0), unused}, rewriter);
+            rewriter.create<memref::StoreOp>(loc, scaled, S, ValueRange{iLoop.getInductionVar(), iLoop.getInductionVar()});
+
+            //erase old ops
+            rewriter.eraseOp(gemmOp);
+            rewriter.eraseOp(scaleOp);
 
             //return
             return true;
