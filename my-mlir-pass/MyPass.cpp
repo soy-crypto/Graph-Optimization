@@ -2892,8 +2892,6 @@ namespace toy_mlp_fusion
             }
 
             //init
-            bool flag = true;
-            
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
@@ -3015,7 +3013,7 @@ namespace toy_mlp_fusion
 
 namespace attention_fusion
 {
-    //collected Ops
+    //Collected Ops
     struct QKScaleOps
     {
         linalg::GenericOp gemmOp;
@@ -3034,7 +3032,7 @@ namespace attention_fusion
         linalg::MatmulOp gemmOp;
     };
 
-    //three patterns
+    //Three patterns
     /** QKScale Pattern */
     struct QKScalePattern : public OpRewritePattern<linalg::GenericOp>
     {
@@ -3389,8 +3387,18 @@ namespace attention_fusion
         }
 
         //Rewrite 
-        bool rewriteOps(QKScaleOps, PatternRewriter &rewriter) const
+        bool rewriteOps(QKScaleOps ops, PatternRewriter &rewriter) const
         {
+            //validity
+            if(!ops.gemmOp)
+            {
+                return false;
+            }
+
+            //rewrite
+            
+
+            //return
             return true;
         }
         
