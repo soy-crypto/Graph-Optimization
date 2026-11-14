@@ -3465,11 +3465,9 @@ namespace attention_fusion
             
             /** k loop body */
             Value k = kLoop.getInductionVar();
-            Value a = rewriter.create<memref::LoadOp>(loc, Q, RangeValue{i, k});
-            Value b = rewriter.create<memref::LoadOp>(loc, K, RangeValue{j, k});
-            
-            
-            Value product = cloneBody(gemmBlock, {a, b, });
+            Value a = rewriter.create<memref::LoadOp>(loc, Q, ValueRange{i, k});
+            Value b = rewriter.create<memref::LoadOp>(loc, K, ValueRange{j, k});            
+            Value sum = cloneBody(gemmBlock, {a, b, jLoop.getRegionIterArg(0)}, rewriter);
 
 
             //return
