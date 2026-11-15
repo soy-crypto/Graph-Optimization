@@ -3620,17 +3620,41 @@ namespace attention_fusion
             
         }
 
-        Value cloneBodyOps() const
+        bool checkExpOp(linalg::GenericOp expOp) const
         {
-            
-        }
-
-        bool chekExpOp() const
-        {
-            return true;
+            return checkMaps() && checkIterator() && checkHead() && checkBlockHead() && checkBlockBody();
         }
 
         /** validate RowSumOp */
+        bool checkMaps() const
+        {
+        
+        }
+
+        bool checkIterator() const
+        {
+
+        }
+
+        bool checkHead() const
+        {
+
+        }
+        
+        bool checkBlockHead() const
+        {
+            
+        }
+        
+        bool checkBlockBody() const
+        {
+
+        }
+
+        bool checkRowsumOp(linalg::GenericOp rowsumOp, linalg::FillOp fillOp) const
+        {
+            return checkMaps() && checkIterator() && checkHead() && checkBlockHead() && checkBlockBody();    
+        }
 
         bool validateOps(ExpSumOps ops, linalg::FillOp fillOp) const
         {
@@ -3640,6 +3664,31 @@ namespace attention_fusion
         }
         
         //rewrite
+        /** clone body ops */
+        Value cloneBodyOps(Block& block, ValueRange arguments, PatternRewriter& rewriter) const
+        {
+            IRMapping mapping;
+            for(unsigned i = 0; i < arguments.size(); i++)
+            {
+                mapping.map(block.getArguments()[i], arguments[i]);
+            }
+            
+            for(Operation& op : block.without_terminator())
+            {
+                rewriter.clone(op, mapping);
+            }
+
+            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
+            if(!yieldOp || yieldOp.getNumOperands() != 1)
+            {
+                return {};
+            }
+
+            Value expResult = mapping.lookupOrDefault(yieldOp.getOperand(0));
+            
+            return expResult;
+        }
+
         bool rewriteOps(ExpSumOps ops, linalg::FillOp fillOp, PatternRewriter& rewriter) const
         {
             return true;
