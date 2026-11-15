@@ -3261,7 +3261,7 @@ namespace attention_fusion
             bool flag4 = checkGEMMBody(op);
 
             //return
-            return flag1 && flag2 && flag3;
+            return flag1 && flag2 && flag3 && flag4;
         }
         
         /** Scale checking */
@@ -3427,7 +3427,7 @@ namespace attention_fusion
             bool flag4 = checkScaleBody(op, getScore(op));
 
             //return
-            return flag1 && flag2 && flag3;
+            return flag1 && flag2 && flag3 && flag4;
         }
 
         /** final chekcing */
