@@ -2892,8 +2892,6 @@ namespace toy_mlp_fusion
             }
 
             //init
-            bool flag = true;
-            
             auto gemmOp = ops.gemmOp;
             auto biasOp = ops.biasOp;
             auto reluOp = ops.reluOp;
@@ -3015,7 +3013,7 @@ namespace toy_mlp_fusion
 
 namespace attention_fusion
 {
-    //collected Ops
+    //Collected Ops
     struct QKScaleOps
     {
         linalg::GenericOp gemmOp;
@@ -3034,13 +3032,13 @@ namespace attention_fusion
         linalg::MatmulOp gemmOp;
     };
 
-    //three patterns
+    //Three patterns
     /** QKScale Pattern */
     struct QKScalePattern : public OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
         
-        //collect two generic ops
+        //Collect
         QKScaleOps collectOps(linalg::GenericOp op) const
         {
             //validity
@@ -3051,7 +3049,7 @@ namespace attention_fusion
 
             //init
             QKScaleOps qksOps;
-            auto prevOp = dyn_cast_or_null<linalg::GenericOp>(op->getPrevNode());
+            auto prevOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
             if(!prevOp)
             {
                 return QKScaleOps{};
@@ -3064,24 +3062,375 @@ namespace attention_fusion
             return qksOps;
         }
         
-        //matched
+        //Match
+        /** GEMM checking */
+        bool checkGEMMMapping(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            //#q_map, #k_map, #score_map
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto k = getAffineDimExpr(2, ctx);
+            auto expectedQMap = AffineMap::get(3, 0, {i, k}, ctx);
+            auto expectedKMap = AffineMap::get(3, 0, {j, k}, ctx);
+            auto expectedScoresMap = AffineMap::get(3, 0, {i, j}, ctx);
+
+            //check
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 3|| maps[0] != expectedQMap || maps[1] != expectedKMap || maps[2] != expectedScoresMap)
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        bool checkGEMMIterator(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            auto iterators = op.getIteratorTypesArray();
+            if(iterators.size() != 3 || 
+                iterators[0] != utils::IteratorType::parallel || iterators[1] != utils::IteratorType::parallel || iterators[2] != utils::IteratorType::reduction)
+            {
+                return false;
+            }
+            
+            return true;
+        }
+
+        bool checkScoresZeroFilling(linalg::FillOp op, Value zero, Value S) const
+        {
+            //validity
+            if(!S || !op)
+            {
+                return false;
+            }
+
+            //init
+            if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1 || op.getDpsInputs()[0] != zero || op.getDpsInits()[0] != S)
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        Value getFirstZero(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return {};
+            }
+
+            //init
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            Block& entry = attentionOp.getOperation()->getRegion(0).front();
+            if(entry.empty())
+            {
+                return {};
+            }
+
+            auto zeroOp = dyn_cast_if_present<arith::ConstantOp>(entry.front());
+            if(!zeroOp)
+            {
+                return {};
+            }
+
+            Value result = zeroOp.getResult();
+            if(!result.getType().isF32() || !matchPattern(result, m_PosZeroFloat()))
+            {
+                return {};
+            }
+
+            //return
+            return result;
+        }
+        
+        bool checkGEMMHead(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op || op.getNumDpsInputs() != 2 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            //get head
+            /** type checking */
+            Value Q = op.getDpsInputs()[0];
+            Value K = op.getDpsInputs()[1];
+            Value scores = op.getDpsInits()[0];
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext()));
+            if(Q.getType() != expectedType || K.getType() != expectedType || scores.getType() != expectedType)
+            {
+                return false;
+            }
+
+            /** scores zero filling checking */
+            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op.getOperation()->getPrevNode());
+            Value zero = getFirstZero(op);
+            if(!zero || !checkScoresZeroFilling(fillOp, zero, scores))
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        bool checkGEMMBody(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            //get body
+            Block& block = op.getOperation()->getRegion(0).front();
+            
+            /** check block head */
+            auto f32 = Float32Type::get(op.getContext());
+            Value q = block.getArgument(0);
+            Value k = block.getArgument(1);
+            Value acc = block.getArgument(2);
+            if(block.getNumArguments() != 3 || q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
+            {
+                return false;
+            }
+
+            /** check block body */
+            SmallVector<Operation*> ops;
+            for(Operation& op : block.getOperations())
+            {
+                ops.push_back(&op);
+            }
+
+            if(ops.size() != 3)
+            {
+                return false;
+            }
+
+            auto mulOp = dyn_cast_or_null<arith::MulFOp>(ops[0]);
+            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != q || mulOp.getOperand(1) != k || mulOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto addOp = dyn_cast_or_null<arith::AddFOp>(ops[1]);
+            if(!addOp || addOp.getNumOperands() != 2 || addOp.getOperand(0) != acc || addOp.getOperand(1) != mulOp.getResult() || addOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto yieldOp = dyn_cast_or_null<linalg::YieldOp>(ops[2]);
+            if(!yieldOp || yieldOp.getNumOperands() != 1 || yieldOp.getOperand(0) != addOp.getResult())
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
         bool checkGEMM(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
             //check mapping
+            bool flag1 = checkGEMMMapping(op);
+            bool flag2 = checkGEMMIterator(op);
+            bool flag3 = checkGEMMHead(op);
+            bool flag4 = checkGEMMBody(op);
 
-
-            //check head parameters
-
-            //check body ops
-
-            //check yield op
+            //return
+            return flag1 && flag2 && flag3;
         }
-
-        bool checkScale(linalg::GenericOp op, Value Scores) const
+        
+        /** Scale checking */
+        bool checkScaleMapping(linalg::GenericOp op) const
         {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
 
+            //expected mapping
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto expectedMatrix = AffineMap::get(2, 0, {i, j}, ctx);
+
+            //check
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 2 || maps[0] != expectedMatrix || maps[1] != expectedMatrix)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
+        bool checkScaleIterator(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            //iterator
+            auto iterator = op.getIteratorTypesArray();
+            if(iterator.size() != 2 || iterator[0] != utils::IteratorType::parallel || iterator[1] != utils::IteratorType::parallel)
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        bool checkScaleHead(linalg::GenericOp op, Value expectedScores) const
+        {
+            //validity
+            if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            //head
+            Value scores = op.getDpsInputs()[0];
+            if(scores != expectedScores)
+            {
+                return false;
+            }
+
+            Value scaled = op.getDpsInits()[0];
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext()));
+            if(scaled.getType() != expectedType)
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        bool checkScaleBody(linalg::GenericOp op, Value score) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+
+            //body
+            Block& block = op.getOperation()->getRegion(0).front();
+
+            /** check block head */
+            auto f32 = Float32Type::get(op.getContext());
+            if(block.getNumArguments() != 2 || block.getArgument(0).getType() != f32 || block.getArgument(1).getType() != f32)
+            {
+                return false;
+            } 
+
+            /** check block body */
+            SmallVector<Operation*> ops;
+            for(Operation& op : block.getOperations())
+            {
+                ops.push_back(&op);
+            }
+
+            if(ops.size() != 2)
+            {
+                return false;
+            }
+
+            auto mulOp = dyn_cast_if_present<arith::MulFOp>(ops[0]);
+            if(!mulOp || mulOp.getNumOperands() != 2 || mulOp.getOperand(0) != block.getArgument(0) || mulOp.getOperand(1) != score || mulOp.getResult().getType() != f32)
+            {
+                return false;
+            }
+
+            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(ops[1]);
+            if(!yieldOp || yieldOp.getNumOperands() != 1 || yieldOp.getOperand(0) != mulOp.getResult())
+            {
+                return false;
+            }
+
+            //return
+            return true;
+        }
+
+        Value getScore(linalg::GenericOp op) const
+        {
+            //validity
+            if(!op)
+            {
+                return {};
+            }    
+
+            //get score
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!attentionOp || attentionOp.getBody().empty())
+            {
+                return {};
+            }
+
+            Block& entry = attentionOp.getOperation()->getRegion(0).front();
+            if(entry.empty())
+            {
+                return {};
+            }
+
+            auto scaleOp = dyn_cast_if_present<arith::ConstantOp>(entry.front().getNextNode());
+            if(!scaleOp)
+            {
+                return {};
+            }
+
+            //return
+            return scaleOp.getResult();
+        }
+
+        bool checkScale(linalg::GenericOp op, Value scores) const
+        {
+            //validity
+            if(!op)
+            {
+                return false;
+            }
+            
+            //check mapping
+            bool flag1 = checkScaleMapping(op);
+            bool flag2 = checkScaleIterator(op);
+            bool flag3 = checkScaleHead(op, scores);
+            bool flag4 = checkScaleBody(op, getScore(op));
+
+            //return
+            return flag1 && flag2 && flag3;
+        }
+
+        /** final chekcing */
         bool isMatchedOps(QKScaleOps ops) const
         {
             //validity
@@ -3097,9 +3446,94 @@ namespace attention_fusion
             return flag;
         }
 
-        //rewrite 
-        bool rewriteOps(QKScaleOps, PatternRewriter &rewriter) const
+        //Rewrite 
+        /** clone original ops */
+        Value cloneBody(Block& block, ValueRange arguments, PatternRewriter& rewriter) const
         {
+            //validity
+            if(block.empty())
+            {
+                return {};
+            }
+
+            //init
+            IRMapping mapping;
+            for(unsigned i = 0; i < arguments.size(); i++)
+            {
+                mapping.map(block.getArgument(i), arguments[i]);
+            }
+
+            for(Operation& op : block.without_terminator())
+            {
+                rewriter.clone(op, mapping);
+            }
+
+            auto yieldOp = dyn_cast_if_present<scf::YieldOp>(block.getTerminator());
+            if(!yieldOp)
+            {
+                return {};
+            }
+
+            Value result = mapping.lookupOrDefault(yieldOp.getOperand(0));
+
+            //return
+            return result;
+        }
+
+        /** rewrite */
+        bool rewriteOps(QKScaleOps ops, PatternRewriter &rewriter) const
+        {
+            //validity
+            if(!ops.gemmOp)
+            {
+                return false;
+            }
+
+            //init
+            auto gemmOp = ops.gemmOp;
+            auto scaleOp = ops.scaleOp;
+            Block& gemmBlock = gemmOp.getOperation()->getRegion(0).front();
+            Block& scaleBlock = scaleOp.getOperation()->getRegion(0).front();
+            Value Q  = gemmOp.getDpsInputs()[0];
+            Value K  = gemmOp.getDpsInputs()[1];
+            Value S  = scaleOp.getDpsInits()[0];
+            auto loc = gemmOp.getLoc();
+
+            //rewriter
+            /** inserstion positon */
+            rewriter.setInsertionPoint(gemmOp);
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+            Value unused = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+
+            /** constants */
+            Value c0  = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
+            Value c1  = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+            
+            /** nested loop head */
+            auto iLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(iLoop.getBody());
+            auto jLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(jLoop.getBody());
+            auto kLoop = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange(zero));
+            rewriter.setInsertionPointToStart(kLoop.getBody());
+            
+            /** k loop body */
+            Value a = rewriter.create<memref::LoadOp>(loc, Q, ValueRange{iLoop.getInductionVar(), kLoop.getInductionVar()});
+            Value b = rewriter.create<memref::LoadOp>(loc, K, ValueRange{jLoop.getInductionVar(), kLoop.getInductionVar()});            
+            Value sum = cloneBody(gemmBlock, {a, b, kLoop.getRegionIterArg(0)}, rewriter);
+            rewriter.create<scf::YieldOp>(loc, sum);
+            rewriter.setInsertionPointAfter(kLoop);
+
+            /** outside k loop */
+            Value scaled = cloneBody(scaleBlock, {kLoop.getResult(0), unused}, rewriter);
+            rewriter.create<memref::StoreOp>(loc, scaled, S, ValueRange{iLoop.getInductionVar(), jLoop.getInductionVar()});
+
+            //erase old ops
+            rewriter.eraseOp(gemmOp);
+            rewriter.eraseOp(scaleOp);
+
+            //return
             return true;
         }
         
@@ -3165,6 +3599,27 @@ namespace attention_fusion
     };
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Register
 void registerMyPass()
