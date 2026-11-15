@@ -3472,8 +3472,8 @@ namespace attention_fusion
                 rewriter.clone(op, mapping);
             }
 
-            auto yieldOp = dyn_cast_if_present<scf::YieldOp>(block.getTerminator());
-            if(!yieldOp)
+            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
+            if(!yieldOp || yieldOp.getNumOperands() != 1)
             {
                 return {};
             }
