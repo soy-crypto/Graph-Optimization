@@ -3582,15 +3582,82 @@ namespace attention_fusion
         }
         
         //validate
-
+        bool validateOps(ExpSumOps ops) const
+        {
+            return true;
+        }
+        
         //rewrite
+        bool rewriteOps(ExpSumOps ops) const
+        {
+            return true;
+        }
+
+        //matchandrewrite
+        LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter& rewriter) const override
+        {
+            //validity
+            if(!op)
+            {
+                return failure();
+            }
+
+            //rewriter
+            ExpSumOps ops = collectOps(op);
+            if(!validateOps(ops) || !rewriteOps(ops))
+            {
+                return failure();
+            }
+
+            //return
+            return success();
+        }
 
     };
 
     /** NormalizesGemm pattern */
     struct NormalizeGemmPattern : public OpRewritePattern<linalg::GenericOp>
     {
+        using OpRewritePattern::OpRewritePattern;
+
+        //collect
+        NormalizeGemmOps collectOps(linalg::GenericOp op) const
+        {
+            return NormalizeGemmOps{};
+        }
         
+        //validate
+        bool validateOps(NormalizeGemmOps ops) const
+        {
+            return true;
+        }
+        
+        //rewrite
+        bool rewriteOps(NormalizeGemmOps ops) const
+        {
+            return true;
+        }
+
+        //matchandrewrite
+        LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter& rewriter) const override
+        {
+            //validity
+            if(!op)
+            {
+                return failure();
+            }
+
+            //rewriter
+            NormalizeGemmOps ops = collectOps(op);
+            if(!validateOps(ops) || !rewriteOps(ops))
+            {
+                return failure();
+            }
+
+            //return
+            return success();
+        }
+
     };
 
     //pass
@@ -3612,7 +3679,7 @@ namespace attention_fusion
         {
             //init
             RewritePatternSet patterns(&getContext());
-            patterns.add<attention_fusion::QKScalePattern>(&getContext());
+            patterns.add<attention_fusion::QKScalePattern, attention_fusion::ExpSumPattern>(&getContext());
             FrozenRewritePatternSet frozen(std::move(patterns));
 
             //apply
