@@ -3559,7 +3559,7 @@ namespace attention_fusion
 
             //rewrite
             bool isRewritten = rewriteOps(qksOps, rewriter);
-            if(isRewritten)
+            if(!isRewritten)
             {
                 return failure();
             }
