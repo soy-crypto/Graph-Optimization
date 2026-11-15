@@ -3578,7 +3578,7 @@ namespace attention_fusion
         //collect
         ExpSumOps collectOps(linalg::FillOp op) const
         {
-            if(!op || isa<linalg::FillOp>(op))
+            if(!op)
             {
                 return ExpSumOps{};
             }
@@ -3594,29 +3594,69 @@ namespace attention_fusion
         }
         
         //validate
-        bool validateOps(ExpSumOps ops) const
+        /** validate ExpOp */
+        bool checkMaps() const
+        {
+            
+        }
+
+        bool checkIterator() const
+        {
+            
+        }
+
+        bool checkHead() const
+        {
+            
+        }
+
+        bool checkBlockHead() const
+        {
+            
+        }
+
+        bool checkBlockBody() const
+        {
+            
+        }
+
+        Value cloneBodyOps() const
+        {
+            
+        }
+
+        bool chekExpOp() const
         {
             return true;
         }
+
+        /** validate RowSumOp */
+
+        bool validateOps(ExpSumOps ops, linalg::FillOp fillOp) const
+        {
+            bool flag1 = checkExpOp(ops.expOp);
+            bool flag2 = checkRowsumOp(ops.rowSumOp, fillOp);
+            return flag1 && flag2;
+        }
         
         //rewrite
-        bool rewriteOps(ExpSumOps ops, PatternRewriter& rewriter) const
+        bool rewriteOps(ExpSumOps ops, linalg::FillOp fillOp, PatternRewriter& rewriter) const
         {
             return true;
         }
 
         //matchandrewrite
-        LogicalResult matchAndRewrite(linalg::FillOp op, PatternRewriter& rewriter) const override
+        LogicalResult matchAndRewrite(linalg::FillOp fillOp, PatternRewriter& rewriter) const override
         {
             //validity
-            if(!op)
+            if(!fillOp)
             {
                 return failure();
             }
 
             //rewriter
-            ExpSumOps ops = collectOps(op);
-            if(!validateOps(ops) || !rewriteOps(ops, rewriter))
+            ExpSumOps ops = collectOps(fillOp);
+            if(!validateOps(ops, fillOp) || !rewriteOps(ops, fillOp, rewriter))
             {
                 return failure();
             }
