@@ -3201,13 +3201,17 @@ namespace attention_fusion
 
             //get body
             Block& block = op.getOperation()->getRegion(0).front();
+            if(block.getNumArguments() != 3)
+            {
+                return false;
+            }
             
             /** check block head */
             auto f32 = Float32Type::get(op.getContext());
             Value q = block.getArgument(0);
             Value k = block.getArgument(1);
             Value acc = block.getArgument(2);
-            if(block.getNumArguments() != 3 || q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
+            if(q.getType() != f32 || k.getType() != f32 || acc.getType() != f32)
             {
                 return false;
             }
