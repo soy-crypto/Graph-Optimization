@@ -3571,8 +3571,19 @@ namespace attention_fusion
     };
 
     /** ExpSum pattern */
-    struct ExpSumPattern : public  OpRewritePattern<linalg::GenericOp >
+    struct ExpSumPattern : public OpRewritePattern<linalg::GenericOp >
     {
+        using OpRewritePattern::OpRewritePattern;
+
+        //collect
+        ExpSumOps collectOps(linalg::GenericOp op) const
+        {
+            return ExpSumOps{};
+        }
+        
+        //validate
+
+        //rewrite
 
     };
 
