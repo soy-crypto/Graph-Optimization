@@ -3615,7 +3615,9 @@ namespace attention_fusion
 
     };
 
-    /** NormalizesGemm pattern */
+    /** NormalizesGemm pattern 
+     *  fusion will lead to more division. not fused. fursion on GPU level
+    */
     struct NormalizeGemmPattern : public OpRewritePattern<linalg::GenericOp>
     {
         using OpRewritePattern::OpRewritePattern;
