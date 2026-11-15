@@ -3570,6 +3570,8 @@ namespace attention_fusion
         
     };
 
+    /** ExpSum pattern */
+    
     //pass
     struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
     {
