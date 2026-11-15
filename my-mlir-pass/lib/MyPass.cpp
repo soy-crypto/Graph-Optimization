@@ -3571,7 +3571,17 @@ namespace attention_fusion
     };
 
     /** ExpSum pattern */
-    
+    struct ExpSumPattern : public  OpRewritePattern<linalg::GenericOp >
+    {
+
+    };
+
+    /** NormalizesGemm pattern */
+    struct NormalizeGemmPattern : public OpRewritePattern<linalg::GenericOp>
+    {
+        
+    };
+
     //pass
     struct AttentionFusionPass : public PassWrapper<AttentionFusionPass, OperationPass<func::FuncOp>>
     {
