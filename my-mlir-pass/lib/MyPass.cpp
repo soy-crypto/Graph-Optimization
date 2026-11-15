@@ -3571,14 +3571,26 @@ namespace attention_fusion
     };
 
     /** ExpSum pattern */
-    struct ExpSumPattern : public OpRewritePattern<linalg::GenericOp >
+    struct ExpSumPattern : public OpRewritePattern<linalg::FillOp>
     {
         using OpRewritePattern::OpRewritePattern;
 
         //collect
-        ExpSumOps collectOps(linalg::GenericOp op) const
+        ExpSumOps collectOps(linalg::FillOp op) const
         {
-            return ExpSumOps{};
+            if(!op || isa<linalg::FillOp>(op))
+            {
+                return ExpSumOps{};
+            }
+
+            auto expOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
+            auto rowSumOp = dyn_cast_if_present<linalg::GenericOp>(op->getNextNode());
+            if(!expOp || !rowSumOp)
+            {
+                return {};
+            }
+        
+            return ExpSumOps{expOp, rowSumOp};
         }
         
         //validate
@@ -3588,13 +3600,13 @@ namespace attention_fusion
         }
         
         //rewrite
-        bool rewriteOps(ExpSumOps ops) const
+        bool rewriteOps(ExpSumOps ops, PatternRewriter& rewriter) const
         {
             return true;
         }
 
         //matchandrewrite
-        LogicalResult matchAndRewrite(linalg::GenericOp op, PatternRewriter& rewriter) const override
+        LogicalResult matchAndRewrite(linalg::FillOp op, PatternRewriter& rewriter) const override
         {
             //validity
             if(!op)
@@ -3604,7 +3616,7 @@ namespace attention_fusion
 
             //rewriter
             ExpSumOps ops = collectOps(op);
-            if(!validateOps(ops) || !rewriteOps(ops))
+            if(!validateOps(ops) || !rewriteOps(ops, rewriter))
             {
                 return failure();
             }
