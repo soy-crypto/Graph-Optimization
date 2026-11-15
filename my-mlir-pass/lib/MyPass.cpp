@@ -3595,65 +3595,65 @@ namespace attention_fusion
         
         //validate
         /** validate ExpOp */
-        bool checkMaps() const
+        bool checkExpMaps() const
         {
             
         }
 
-        bool checkIterator() const
+        bool checkExpIterator() const
         {
             
         }
 
-        bool checkHead() const
+        bool checkExpHead() const
         {
             
         }
 
-        bool checkBlockHead() const
+        bool checkExpBlockHead() const
         {
             
         }
 
-        bool checkBlockBody() const
+        bool checkExpBlockBody() const
         {
             
         }
 
         bool checkExpOp(linalg::GenericOp expOp) const
         {
-            return checkMaps() && checkIterator() && checkHead() && checkBlockHead() && checkBlockBody();
+            return checkExpMaps() && checkExpIterator() && checkExpHead() && checkExpBlockHead() && checkExpBlockBody();
         }
 
         /** validate RowSumOp */
-        bool checkMaps() const
+        bool checkRowsumMaps() const
         {
         
         }
 
-        bool checkIterator() const
+        bool checkRowsumIterator() const
         {
 
         }
 
-        bool checkHead() const
+        bool checkRowsumHead() const
         {
 
         }
         
-        bool checkBlockHead() const
+        bool checkRowsumBlockHead() const
         {
             
         }
         
-        bool checkBlockBody() const
+        bool checkRowsumBlockBody() const
         {
 
         }
 
         bool checkRowsumOp(linalg::GenericOp rowsumOp, linalg::FillOp fillOp) const
         {
-            return checkMaps() && checkIterator() && checkHead() && checkBlockHead() && checkBlockBody();    
+            return checkRowsumMaps() && checkRowsumIterator() && checkRowsumHead() && checkRowsumBlockHead() && checkRowsumBlockBody();    
         }
 
         bool validateOps(ExpSumOps ops, linalg::FillOp fillOp) const
