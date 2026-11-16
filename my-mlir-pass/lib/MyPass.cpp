@@ -3575,7 +3575,7 @@ namespace attention_fusion
     struct ExpSumPattern : public OpRewritePattern<linalg::FillOp>
     {
         using OpRewritePattern::OpRewritePattern;
-
+        
         //collect
         ExpSumOps collectOps(linalg::FillOp op) const
         {
@@ -3602,11 +3602,11 @@ namespace attention_fusion
             auto* ctx = op.getContext();
             auto i = getAffineDimExpr(0, ctx);
             auto j = getAffineDimExpr(1, ctx);
-            auto expectedMap  = AffineMap::get(2, 0, {i, j}, ctx);
-            auto expectedMap1 = AffineMap::get(2, 0, {i}, ctx);
+            auto expectedMap  = AffineMap::get(2, 0, {sdf, j}, op.getContext());
+            auto expectedMap1 = AffineMap::get(2, 0, {i}, op.getContext());
 
             //check map
-            
+            sdfd
             
         }
 
