@@ -3026,6 +3026,7 @@ namespace attention_fusion
         linalg::GenericOp rowSumOp;
     };
 
+    /** normalizetion pattern need more division. need to fusion on GPU level */
     struct NormalizeGemmOps
     {
         linalg::GenericOp normalizeOp;
