@@ -3735,7 +3735,7 @@ namespace attention_fusion
             Value a = rewriter.create<memref::LoadOp>(loc, Scaled, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
             Value b = rewriter.create<memref::LoadOp>(loc, maxRow, ValueRange{iLoopOp.getInductionVar()});
             Value expVal = cloneBodyOps(expBlock, ValueRange{a, b, unused}, rewriter);
-            Value sum = cloneBodyOps(rowsumBlock, ValueRange{expVal, jLoopOp.getRegionIterArg(0)}, rewriter);
+            Value sum    = cloneBodyOps(rowsumBlock, ValueRange{expVal, jLoopOp.getRegionIterArg(0)}, rewriter);
             rewriter.create<memref::StoreOp>(loc, expVal, expScores, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
             rewriter.create<scf::YieldOp>(loc, ValueRange{sum});
             rewriter.setInsertionPointAfter(jLoopOp);
