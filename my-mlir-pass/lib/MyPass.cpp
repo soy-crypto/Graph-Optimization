@@ -3716,15 +3716,15 @@ namespace attention_fusion
 
             Block& expBlock = expOp.getOperation()->getRegion(0).front();
             Block& rowsumBlock = rowsumOp.getOperation()->getRegion(0).front();
-            
+
             auto loc = expOp.getLoc();
 
             //nested loops
             rewriter.setInsertionPoint(expOp);
-            Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
-            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
-            Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
-            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+            Value c0     = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+            Value c64    = rewriter.create<arith::ConstantIndexOp>(loc, 64);
+            Value c1     = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+            Value zero   = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
             Value unused = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
 
             auto iLoopOp = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
