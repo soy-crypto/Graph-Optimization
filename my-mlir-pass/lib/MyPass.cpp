@@ -3672,6 +3672,12 @@ namespace attention_fusion
             {
                 return {};
             }
+
+            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
+            if(!yieldOp || yieldOp.getNumOperands() != 1)
+            {
+                return {};
+            }
             
             //clone
             IRMapping mapping;
@@ -3685,14 +3691,9 @@ namespace attention_fusion
                 rewriter.clone(op, mapping);
             }
 
-            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
-            if(!yieldOp || yieldOp.getNumOperands() != 1)
-            {
-                return {};
-            }
-
             Value expResult = mapping.lookupOrDefault(yieldOp.getOperand(0));
             
+            //return
             return expResult;
         }
 
@@ -3738,7 +3739,6 @@ namespace attention_fusion
             rewriter.setInsertionPointAfter(jLoopOp);
 
             rewriter.create<memref::StoreOp>(loc, jLoopOp.getResult(0), R, ValueRange{iLoopOp.getInductionVar()});
-            rewriter.setInsertionPointAfter(iLoopOp);
 
             //earse
             rewriter.eraseOp(expOp);
