@@ -3691,6 +3691,12 @@ namespace attention_fusion
 
         bool rewriteOps(ExpSumOps ops, linalg::FillOp fillOp, PatternRewriter& rewriter) const
         {
+            if(!ops.expOp || !ops.rowSumOp || !fillOp)
+            {
+                return false;
+            }
+
+            
             return true;
         }
 
