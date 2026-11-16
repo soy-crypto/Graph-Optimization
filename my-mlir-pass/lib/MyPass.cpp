@@ -3699,22 +3699,51 @@ namespace attention_fusion
             //init
             auto expOp = ops.expOp;
             auto rowsumOp = ops.rowSumOp;
-            auto loc = expOp.getLoc();
+
             Value Scaled = expOp.getDpsInputs()[0];
-            Value maxRow = rowsumOp.getDpsInputs()[1];
+            Value maxRow = expOp.getDpsInputs()[1];
             Value R = rowsumOp.getDpsInits()[0];
+            Value expScores = expOp.getDpsInits()[0];
+
+            Block& expBlock = expOp.getOperation()->getRegion(0).front();
+            Block& rowsumBlock = rowsumOp.getOperation()->getRegion(0).front();
+            auto loc = expOp.getLoc();
 
             //nested loops
-            rewriter.setInsertionPoint(expOp.getBody());
+            rewriter.setInsertionPoint(expOp);
+            Value c0 = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+            Value c64 = rewriter.create<arith::ConstantIndexOp>(loc, 64);
+            Value c1 = rewriter.create<arith::ConstantIndexOp>(loc, 1);
+            Value zero = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+            Value unused = rewriter.create<arith::ConstantFloatOp>(loc, rewriter.getF32Type(), APFloat(0.0f));
+
+            auto iLoopOp = rewriter.create<scf::ForOp>(loc, c0, c64, c1);
+            rewriter.setInsertionPointToStart(iLoopOp.getBody());
+            auto jLoopOp = rewriter.create<scf::ForOp>(loc, c0, c64, c1, ValueRange{zero});
+            rewriter.setInsertionPointToStart(jLoopOp.getBody());
             
-            
-            
-            
+            Value a = rewriter.create<memref::LoadOp>(loc, Scaled, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
+            Value b = rewriter.create<memref::LoadOp>(loc, maxRow, ValueRange{jLoopOp.getInductionVar()});
+            Value expVal = cloneBodyOps(expBlock, ValueRange{a, b, unused}, rewriter);
+            Value sum = cloneBodyOps(rowsumBlock, ValueRange{expVal, jLoopOp.getRegionIterArg(0)}, rewriter);
+            rewriter.create<memref::StoreOp>(loc, expScores, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
+            rewriter.create<scf::YieldOp>(loc, ValueRange{sum});
+            rewriter.setInsertionPointAfter(jLoopOp);
+
+            rewriter.create<memref::StoreOp>(loc, jLoopOp.getResult(0), R, ValueRange{jLoopOp.getInductionVar()});
+            rewriter.setInsertionPointAfter(iLoopOp);
+
+            //earse
+            rewriter.eraseOp(expOp);
+            rewriter.eraseOp(fillOp);
+            rewriter.eraseOp(rowsumOp);
+
+            //return
             return true;
         }
 
         //matchandrewrite
-        LogicalResult matchAndRewrite(linalg::FillOp fillOp, PatternRewriter& rewriter) const override
+        LogicalResult matchAndRewrite(linalg::FillOp fillOp, PatternRewriter &rewriter) const override
         {
             //validity
             if(!fillOp)
