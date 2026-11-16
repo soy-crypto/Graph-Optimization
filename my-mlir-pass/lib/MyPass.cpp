@@ -3667,6 +3667,13 @@ namespace attention_fusion
         /** clone body ops */
         Value cloneBodyOps(Block& block, ValueRange arguments, PatternRewriter& rewriter) const
         {
+            //validity 
+            if(block.empty() || block.getNumArguments() != arguments.size())
+            {
+                return {};
+            }
+            
+            //clone
             IRMapping mapping;
             for(unsigned i = 0; i < arguments.size(); i++)
             {
@@ -3723,14 +3730,14 @@ namespace attention_fusion
             rewriter.setInsertionPointToStart(jLoopOp.getBody());
             
             Value a = rewriter.create<memref::LoadOp>(loc, Scaled, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
-            Value b = rewriter.create<memref::LoadOp>(loc, maxRow, ValueRange{jLoopOp.getInductionVar()});
+            Value b = rewriter.create<memref::LoadOp>(loc, maxRow, ValueRange{iLoopOp.getInductionVar()});
             Value expVal = cloneBodyOps(expBlock, ValueRange{a, b, unused}, rewriter);
             Value sum = cloneBodyOps(rowsumBlock, ValueRange{expVal, jLoopOp.getRegionIterArg(0)}, rewriter);
-            rewriter.create<memref::StoreOp>(loc, expScores, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
+            rewriter.create<memref::StoreOp>(loc, expVal, expScores, ValueRange{iLoopOp.getInductionVar(), jLoopOp.getInductionVar()});
             rewriter.create<scf::YieldOp>(loc, ValueRange{sum});
             rewriter.setInsertionPointAfter(jLoopOp);
 
-            rewriter.create<memref::StoreOp>(loc, jLoopOp.getResult(0), R, ValueRange{jLoopOp.getInductionVar()});
+            rewriter.create<memref::StoreOp>(loc, jLoopOp.getResult(0), R, ValueRange{iLoopOp.getInductionVar()});
             rewriter.setInsertionPointAfter(iLoopOp);
 
             //earse
