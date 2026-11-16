@@ -3696,6 +3696,19 @@ namespace attention_fusion
                 return false;
             }
 
+            //init
+            auto expOp = ops.expOp;
+            auto rowsumOp = ops.rowSumOp;
+            auto loc = expOp.getLoc();
+            Value Scaled = expOp.getDpsInputs()[0];
+            Value maxRow = rowsumOp.getDpsInputs()[1];
+            Value R = rowsumOp.getDpsInits()[0];
+
+            //nested loops
+            rewriter.setInsertionPoint(expOp.getBody());
+            
+            
+            
             
             return true;
         }
