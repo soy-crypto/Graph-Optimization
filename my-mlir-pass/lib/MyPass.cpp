@@ -3716,6 +3716,7 @@ namespace attention_fusion
 
             Block& expBlock = expOp.getOperation()->getRegion(0).front();
             Block& rowsumBlock = rowsumOp.getOperation()->getRegion(0).front();
+            
             auto loc = expOp.getLoc();
 
             //nested loops
