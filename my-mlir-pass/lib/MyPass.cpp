@@ -3596,8 +3596,17 @@ namespace attention_fusion
         
         //validate
         /** validate ExpOp */
-        bool checkExpMaps() const
+        bool checkExpMaps(linalg::GenericOp op) const
         {
+            //init
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto expectedMap  = AffineMap::get(2, 0, {i, j}, ctx);
+            auto expectedMap1 = AffineMap::get(2, 0, {i}, ctx);
+
+            //check map
+            
             
         }
 
