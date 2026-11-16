@@ -3633,18 +3633,27 @@ namespace attention_fusion
 
         Value getAllocationOp(Block& block, unsigned index) const 
         {
+            //validity
             if(block.empty() || index < 0)
             {
                 return {};
             }
             
-            auto op = block.front();
+            //get allocation op
+            Operation* op = &block.front();
             for(unsigned i = 0; i < index; i++)
             {
-                op = op.getOperation()->getNextNode();
+                op = op->getNextNode();
             }
 
-            return op;
+            auto allocOp = dyn_cast_if_present<memref::AllocaOp>(op);
+            if(!allocOp)
+            {
+                return {};
+            }
+
+            //return
+            return allocOp.getResult();
         }
 
         bool checkExpHead(linalg::GenericOp op) const
