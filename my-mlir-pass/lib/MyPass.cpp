@@ -3602,22 +3602,99 @@ namespace attention_fusion
             auto* ctx = op.getContext();
             auto i = getAffineDimExpr(0, ctx);
             auto j = getAffineDimExpr(1, ctx);
-            auto expectedMap  = AffineMap::get(2, 0, {sdf, j}, op.getContext());
-            auto expectedMap1 = AffineMap::get(2, 0, {i}, op.getContext());
+
+            //get expected maps
+            auto expectedMap  = AffineMap::get(2, 0, {i, j}, ctx);
+            auto expectedMap1 = AffineMap::get(2, 0, {i}, ctx);
 
             //check map
-            sdfd
-            
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 3 || maps[0] != expectedMap || maps[1] != expectedMap1 || maps[2] != expectedMap)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
-        bool checkExpIterator() const
+        bool checkExpIterator(linalg::GenericOp op) const
         {
+            //init
+            auto iterator = op.getIteratorTypesArray();
+            if(iterator.size() != 2 || iterator[0] != utils::IteratorType::parallel || iterator[1] != utils::IteratorType::parallel)
+            {
+                return false;
+            }
             
+            //return
+            return true;
         }
 
-        bool checkExpHead() const
+        Value getAllocationOp(Block& block, unsigned index) const 
         {
+            if(block.empty() || index < 0)
+            {
+                return {};
+            }
             
+            auto op = block.front();
+            for(unsigned i = 0; i < index; i++)
+            {
+                op = op.getOperation()->getNextNode();
+            }
+
+            return op;
+        }
+
+        bool checkExpHead(linalg::GenericOp op) const
+        {
+            if(!op || op.getNumDpsInputs() != 2 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            //init
+            Value alloc2 = op.getDpsInputs()[0];
+            Value alloc3 = op.getDpsInputs()[1];
+            Value alloc4 = op.getDpsInits()[0];
+
+            //checking
+            /** type checking */
+            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext())); 
+            if(alloc2.getType() != expectedType || alloc3.getType() != expectedType || alloc4.getType() != expectedType)
+            {
+                return false;
+            }
+
+            /** value checking */
+            auto prevOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
+            if(!prevOp || alloc3 != prevOp.getDpsInits()[0] )
+            {
+                return false;
+            }
+
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!attentionOp)
+            {
+                return false;
+            }
+
+            Block& block = attentionOp->getRegion(0).front();
+            if(block.empty() || block.empty())
+            {
+                return false;
+            }
+            
+            auto expectedAlloc2 = getAllocationOp(block, 8);
+            auto expectedAlloc4 = getAllocationOp(block, 10);
+            if(alloc2 != expectedAlloc2 || alloc4 != expectedAlloc4)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
         bool checkExpBlockHead() const
