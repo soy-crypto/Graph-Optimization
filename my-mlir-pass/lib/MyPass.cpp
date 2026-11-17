@@ -3816,7 +3816,7 @@ namespace attention_fusion
             {
                 return {};
             }
-            
+
             auto expOp = dyn_cast_if_present<linalg::GenericOp>(fillOp->getPrevNode());
             if(!expOp || expOp.getNumDpsInits() != 1)
             {
@@ -3883,16 +3883,26 @@ namespace attention_fusion
 
         }
 
-        bool checkRowsumOp(linalg::GenericOp rowsumOp, linalg::FillOp fillOp) const
+        bool checkRowsumOp(linalg::GenericOp rowsumOp) const
         {
-            return checkRowsumMaps() && checkRowsumIterator() && checkRowsumHead() && checkRowsumBlockHead() && checkRowsumBlockBody();    
+            return checkRowsumMaps(rowsumOp) && checkRowsumIterator(rowsumOp) && checkRowsumHead(rowsumOp) && checkRowsumBlockHead(rowsumOp) && checkRowsumBlockBody(rowsumOp);    
+        }
+
+        /** validate fillOp */
+        bool checkFillOp(linalg::FillOp op) const
+        {
+            return true;
         }
 
         bool validateOps(ExpSumOps ops, linalg::FillOp fillOp) const
         {
+            //check three ops
             bool flag1 = checkExpOp(ops.expOp);
-            bool flag2 = checkRowsumOp(ops.rowSumOp, fillOp);
-            return flag1 && flag2;
+            bool flag2 = checkRowsumOp(ops.rowSumOp);
+            bool flag3 = checkFillOp(fillOp);
+
+            //return
+            return flag1 && flag2 && flag3;
         }
         
         //rewrite
