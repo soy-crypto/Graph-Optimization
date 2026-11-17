@@ -3812,6 +3812,11 @@ namespace attention_fusion
             }
 
             auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
+            if(!fillOp)
+            {
+                return {};
+            }
+            
             auto expOp = dyn_cast_if_present<linalg::GenericOp>(fillOp->getPrevNode());
             if(!expOp || expOp.getNumDpsInits() != 1)
             {
