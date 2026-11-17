@@ -3804,6 +3804,39 @@ namespace attention_fusion
             return true;
         }
 
+        Value getExpectedInput(linalg::GenericOp op) const
+        {
+            if(!op)
+            {
+                return {};
+            }
+
+            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
+            auto gemmOp = dyn_cast_if_present<linalg::GenericOp>(fillOp);
+            if(!gemmOp)
+            {
+                return {};
+            }
+
+            return gemmOp.getDpsInits()[0];
+        }
+
+        Value getExpectedOutput(linalg::GenericOp op) const
+        {
+            if(!op)
+            {
+                return {};
+            }
+
+            auto fillOp = dyn_cast_if_present<linalg::GenericOp>(op);
+            if(!fillOp)
+            {
+                return {};
+            }
+
+            return fillOp.getDpsInits()[0];
+        }
+
         bool checkRowsumHead(linalg::GenericOp op) const
         {
             //validity
