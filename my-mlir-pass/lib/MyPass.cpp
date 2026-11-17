@@ -3812,13 +3812,13 @@ namespace attention_fusion
             }
 
             auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
-            auto gemmOp = dyn_cast_if_present<linalg::GenericOp>(fillOp);
-            if(!gemmOp)
+            auto expOp = dyn_cast_if_present<linalg::GenericOp>(fillOp->getPrevNode());
+            if(!expOp || expOp.getNumDpsInits() != 1)
             {
                 return {};
             }
 
-            return gemmOp.getDpsInits()[0];
+            return expOp.getDpsInits()[0];
         }
 
         Value getExpectedOutput(linalg::GenericOp op) const
@@ -3828,8 +3828,8 @@ namespace attention_fusion
                 return {};
             }
 
-            auto fillOp = dyn_cast_if_present<linalg::GenericOp>(op);
-            if(!fillOp)
+            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
+            if(!fillOp || fillOp.getNumDpsInits() != 1)
             {
                 return {};
             }
