@@ -22,6 +22,7 @@
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "llvm/ADT/STLExtras.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Math/IR/Math.h"
 
 #include <string>
 #include <cstdint>
@@ -3631,31 +3632,6 @@ namespace attention_fusion
             return true;
         }
 
-        Value getAllocationOp(Block& block, unsigned index) const 
-        {
-            //validity
-            if(block.empty() || index < 0)
-            {
-                return {};
-            }
-            
-            //get allocation op
-            Operation* op = &block.front();
-            for(unsigned i = 0; i < index; i++)
-            {
-                op = op->getNextNode();
-            }
-
-            auto allocOp = dyn_cast_if_present<memref::AllocaOp>(op);
-            if(!allocOp)
-            {
-                return {};
-            }
-
-            //return
-            return allocOp.getResult();
-        }
-
         bool checkExpHead(linalg::GenericOp op) const
         {
             if(!op || op.getNumDpsInputs() != 2 || op.getNumDpsInits() != 1)
@@ -3706,35 +3682,136 @@ namespace attention_fusion
             return true;
         }
 
-        bool checkExpBlockHead() const
+        bool checkExpBlockHead(Block& block) const
         {
-            
+            if(block.empty() || block.getNumArguments() != 3)
+            {
+                return false;
+            }
+
+            if(!block.getArgument(0).getType().isF32() || !block.getArgument(1).getType().isF32() || !block.getArgument(2).getType().isF32())
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        bool checkExpBlockBody() const
+        bool checkExpBlockBody(Block& block) const
         {
+            if(block.empty() || std::distance(block.begin(), block.end()) != 3)
+            {
+                return false;
+            }
+
+            SmallVector<Operation*> ops;
+            for(Operation& op : block.getOperations())
+            {
+                ops.push_back(&op);
+            }
+
+            auto firstOp = dyn_cast_if_present<arith::SubFOp>(ops[0]);
+            if(!firstOp || firstOp.getNumOperands() != 2 || !firstOp.getResult().getType().isF32() || firstOp.getOperand(0) != block.getArgument(0) || firstOp.getOperand(1) != block.getArgument(1))
+            {
+                return false;
+            }
+
+            auto secondOp = dyn_cast_if_present<math::ExpOp>(ops[1]);
+            if(!secondOp || secondOp->getNumOperands() != 1 || !secondOp.getResult().getType().isF32() || secondOp.getOperand() != firstOp.getResult())
+            {
+                return false;
+            }
+
+            auto lastOp = dyn_cast_if_present<linalg::YieldOp>(ops[2]);
+            if(!lastOp || lastOp.getNumOperands() != 1 || lastOp.getOperand(0) != secondOp.getResult())
+            {
+                return false;
+            }
+
+            return true;
+        }
+        
+        Value getAllocationOp(Block& block, unsigned index) const 
+        {
+            //validity
+            if(block.empty() || index < 0)
+            {
+                return {};
+            }
             
+            //get allocation op
+            Operation* op = &block.front();
+            for(unsigned i = 0; i < index; i++)
+            {
+                op = op->getNextNode();
+            }
+
+            auto allocOp = dyn_cast_if_present<memref::AllocaOp>(op);
+            if(!allocOp)
+            {
+                return {};
+            }
+
+            //return
+            return allocOp.getResult();
         }
 
         bool checkExpOp(linalg::GenericOp expOp) const
         {
-            return checkExpMaps() && checkExpIterator() && checkExpHead() && checkExpBlockHead() && checkExpBlockBody();
+            Block& block = expOp.getOperation()->getRegion(0).front();
+            return checkExpMaps(expOp) && checkExpIterator(expOp) && checkExpHead(expOp) && checkExpBlockHead(block) && checkExpBlockBody(block);
         }
 
         /** validate RowSumOp */
-        bool checkRowsumMaps() const
+        bool checkRowsumMaps(linalg::GenericOp op) const
         {
-        
+            if(!op)
+            {
+                return false;
+            }
+
+            //init
+            auto* ctx = op.getContext();
+            auto i = getAffineDimExpr(0, ctx);
+            auto j = getAffineDimExpr(1, ctx);
+            auto expectedMap  = AffineMap::get(2, 0, {i, j}, ctx);
+            auto expectedMap1 = AffineMap::get(2, 0, {i}, ctx);
+
+            //check
+            auto maps = op.getIndexingMapsArray();
+            if(maps.size() != 2 || maps[0] != expectedMap || maps[1] != expectedMap1)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
 
-        bool checkRowsumIterator() const
+        bool checkRowsumIterator(linalg::GenericOp op) const
         {
+            if(!op)
+            {
+                return false;
+            }
 
+            auto iterator = op.getIteratorTypesArray();
+            if(iterator.size() != 2 || iterator[0] != utils::IteratorType::parallel || iterator[1] != utils::IteratorType::reduction)
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        bool checkRowsumHead() const
+        bool checkRowsumHead(linalg::GenericOp op) const
         {
+            if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
 
+            
         }
         
         bool checkRowsumBlockHead() const
@@ -3948,8 +4025,6 @@ namespace attention_fusion
     };
     
 }
-
-
 
 
 
