@@ -3873,19 +3873,20 @@ namespace attention_fusion
             return true;
         }
         
-        bool checkRowsumBlockHead() const
+        bool checkRowsumBlockHead(Block& block) const
         {
-            
+            return true;
         }
         
-        bool checkRowsumBlockBody() const
+        bool checkRowsumBlockBody(Block& block) const
         {
-
+            return true;
         }
 
         bool checkRowsumOp(linalg::GenericOp rowsumOp) const
         {
-            return checkRowsumMaps(rowsumOp) && checkRowsumIterator(rowsumOp) && checkRowsumHead(rowsumOp) && checkRowsumBlockHead(rowsumOp) && checkRowsumBlockBody(rowsumOp);    
+            Block& block = rowsumOp.getOperation()->getRegion(0).front();
+            return checkRowsumMaps(rowsumOp) && checkRowsumIterator(rowsumOp) && checkRowsumHead(rowsumOp) && checkRowsumBlockHead(block) && checkRowsumBlockBody(block);    
         }
 
         /** validate fillOp */
