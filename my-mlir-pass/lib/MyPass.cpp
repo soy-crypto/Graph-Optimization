@@ -3806,12 +3806,33 @@ namespace attention_fusion
 
         bool checkRowsumHead(linalg::GenericOp op) const
         {
+            //validity
             if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1)
             {
                 return false;
             }
-
             
+            //init
+            auto expected2DType = MemRefType::get({64, 64}, Float32Type::get(op.getContext()));
+            auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
+            
+            //check
+            Value input = op.getDpsInputs()[0];
+            Value expectedInput = getExpectedInput(op);
+            if(input.getType() != expected2DType || input != expectedInput)
+            {
+                return false;
+            }
+
+            Value output = op.getDpsInits()[0];
+            Value expectedOutput = getExpectedOutput(op);
+            if(output.getType() != expected1DType || output != expectedOutput)
+            {
+                return false;
+            }
+
+            //return
+            return true;
         }
         
         bool checkRowsumBlockHead() const
