@@ -3963,7 +3963,7 @@ namespace attention_fusion
             auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
             if(!attentionOp)
             {
-                return;
+                return false;
             }
 
             //checking
