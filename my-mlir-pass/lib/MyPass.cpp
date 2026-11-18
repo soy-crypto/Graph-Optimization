@@ -3875,6 +3875,7 @@ namespace attention_fusion
         
         bool checkRowsumBlockHead(Block& block) const
         {
+            
             return true;
         }
         
@@ -3977,7 +3978,7 @@ namespace attention_fusion
             Value output = op.getDpsInits()[0];
             auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
             Value expectedOutput = getAllocationOp(attentionOp, 11);
-            if(output.getType() == expected1DType || output != expectedOutput)
+            if(output.getType() != expected1DType || output != expectedOutput)
             {
                 return false;
             }
