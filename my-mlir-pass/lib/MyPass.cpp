@@ -3897,7 +3897,7 @@ namespace attention_fusion
                 return {};
             }
             
-            Block& block = op.getOperation()->getRegion(0).front();
+            Block& block = op.getBody().front();
             if(block.empty())
             {
                 return {};
