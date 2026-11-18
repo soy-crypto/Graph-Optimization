@@ -3975,6 +3975,7 @@ namespace attention_fusion
             }
 
             Value output = op.getDpsInits()[0];
+            auto expectedType = 
             Value expectedOutput = getAllocationOp(attentionOp, 11);
             if(!output.getType().isF32() || output != expectedOutput)
             {
