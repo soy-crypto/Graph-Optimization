@@ -3890,8 +3890,69 @@ namespace attention_fusion
         }
 
         /** validate fillOp */
+        Value getConstantOp(func::FuncOp op, unsigned index) const
+        {
+
+        }
+        
+        Value getAllocationOp(func::FuncOp op, unsigned index) const
+        {
+
+        }
+
+        Value getExpectedInput(linalg::GenericOp op, unsigned index) const
+        {
+            if(!op)
+            {
+                return {};
+            }
+            
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!attentionOp)
+            {
+                return;
+            }
+
+            return getConstantOp(attentionOp, index);
+        }
+
+        Value getExpectedOutput(linalg::GenericOp op) const
+        {
+            if(!op)
+            {
+                return {};
+            }
+
+            auto attentionOp = op.getOperation()->getParentOfType<func::FuncOp>();
+            if(!attentionOp)
+            {
+                return;
+            }
+            
+            return getExpectedOutputs(attentionOp, index);
+        }
+
         bool checkFillOp(linalg::FillOp op) const
         {
+            if(!op || op.getNumDpsInputs() != 1 || op.getNumDpsInits() != 1)
+            {
+                return false;
+            }
+
+            Value input = op.getDpsInputs()[0];
+            Value expectedInput = getExpectedInput(op, 6);
+            if(!input.getType().isF32() || input != expectedInput)
+            {
+                return false;
+            }
+
+            Value output = op.getDpsInits()[0];
+            Value expectedOutput() = getExpectedOutput(op, 11);
+            if(!output.getType().isF32() || output != expectedOutput())
+            {
+                return false;
+            }
+
             return true;
         }
 
