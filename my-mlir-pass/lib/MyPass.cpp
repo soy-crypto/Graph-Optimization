@@ -3892,7 +3892,7 @@ namespace attention_fusion
         /** validate fillOp */
         Value getConstantOp(func::FuncOp op, unsigned index) const
         {
-            if(!op)
+            if(!op || op.getBody().empty())
             {
                 return {};
             }
@@ -3906,7 +3906,10 @@ namespace attention_fusion
             auto* curOp = &block.front();
             for(unsigned i = 0; i < index; i++)
             {
-                curOp = curOp->getNextNode();   
+                if(curOp)
+                {
+                    curOp = curOp->getNextNode();   
+                }
             }
 
             if(!curOp || !isa<arith::ConstantOp>(curOp))
@@ -3919,12 +3922,33 @@ namespace attention_fusion
         
         Value getAllocationOp(func::FuncOp op, unsigned index) const
         {
-            if(!op)
+            if(!op || op.getBody().empty())
             {
                 return {};
             }
 
+            Block& block = op.getBody().front();
+            if(block.empty())
+            {
+                return {};
+            }
 
+            auto* curOp = &block.front();
+            for(unsigned i = 0; i < index; i++)
+            {
+                if(curOp)
+                {
+                    curOp = curOp->getNextNode();  
+                }
+ 
+            }
+
+            if(!curOp || !isa<memref::AllocOp>(curOp))
+            {
+                return {};
+            }
+
+            return curOp->getResult(0);
         }
 
         bool checkFillOp(linalg::FillOp op) const
