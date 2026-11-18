@@ -3909,13 +3909,12 @@ namespace attention_fusion
                 curOp = curOp->getNextNode();   
             }
 
-            curOp = dyn_cast_if_present<arith::ConstantOp>(curOp);
-            if(!curOp)
+            if(!curOp || !isa<arith::ConstantOp>(curOp))
             {
                 return {};
             }
 
-            return curOp.getResult();
+            return curOp->getResult(0);
         }
         
         Value getAllocationOp(func::FuncOp op, unsigned index) const
