@@ -4187,7 +4187,6 @@ namespace attention_fusion
 }
 
 
-
 //Register
 void registerMyPass()
 {
