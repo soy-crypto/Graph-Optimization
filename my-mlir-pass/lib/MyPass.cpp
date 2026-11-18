@@ -3968,15 +3968,15 @@ namespace attention_fusion
 
             //checking
             Value input = op.getDpsInputs()[0];
-            Value expectedInput = getConstantOp(op, 6);
+            Value expectedInput = getConstantOp(attentionOp, 6);
             if(!input.getType().isF32() || input != expectedInput)
             {
                 return false;
             }
 
             Value output = op.getDpsInits()[0];
-            Value expectedOutput() = getAllocationOp(op, 11);
-            if(!output.getType().isF32() || output != expectedOutput())
+            Value expectedOutput = getAllocationOp(attentionOp, 11);
+            if(!output.getType().isF32() || output != expectedOutput)
             {
                 return false;
             }
