@@ -3975,9 +3975,9 @@ namespace attention_fusion
             }
 
             Value output = op.getDpsInits()[0];
-            auto expectedType = 
+            auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
             Value expectedOutput = getAllocationOp(attentionOp, 11);
-            if(!output.getType().isF32() || output != expectedOutput)
+            if(output.getType() == expected1DType || output != expectedOutput)
             {
                 return false;
             }
