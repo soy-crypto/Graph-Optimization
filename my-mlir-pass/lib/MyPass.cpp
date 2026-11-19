@@ -3908,7 +3908,7 @@ namespace attention_fusion
 
             Value output = op.getDpsInits()[0];
             auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
-            if(output.getType() != expected1DType || !llvm::isa_and_nonnull<memref::AllocOp>(output))
+            if(output.getType() != expected1DType || !llvm::isa_and_nonnull<memref::AllocOp>(output.getDefiningOp()))
             {
                 return false;
             }
