@@ -3875,7 +3875,7 @@ namespace attention_fusion
         
         bool checkRowsumBlockHead(Block& block) const
         {
-            bool flag = block.empty() && block.getNumArguments() != 2 && !block.getArgument(0).getType().isF32() && !block.getArgument().getType().isF32();
+            bool flag = !block.empty() && block.getNumArguments() != 2 && !block.getArgument(0).getType().isF32() && !block.getArgument(1).getType().isF32();
             return flag;
         }
         
