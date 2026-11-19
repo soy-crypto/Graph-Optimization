@@ -3875,24 +3875,24 @@ namespace attention_fusion
         
         bool checkRowsumBlockHead(Block& block) const
         {
-            bool flag = !block.empty() && block.getNumArguments() != 2 && !block.getArgument(0).getType().isF32() && !block.getArgument(1).getType().isF32();
+            bool flag = !block.empty() && block.getNumArguments() == 2 && block.getArgument(0).getType().isF32() && block.getArgument(1).getType().isF32();
             return flag;
         }
         
         bool checkRowsumBlockBody(Block& block) const
         {
-            if(!block.empty() && std::distance(block.begin(), block.end()) != 2)
+            if(block.empty() || std::distance(block.begin(), block.end()) != 2)
             {
                 return false;
             }
 
-            auto firstOp = dyn_cast_if_present<arith::AddFOp>(block.begin());
-            if(!firstOp || firstOp.getNumOperands() != 2 || firstOp.getOperand(0) != block.getArgument(0) || firstOp.getOperand(1) != block.getArgument(1))
+            auto firstOp = dyn_cast_if_present<arith::AddFOp>(&block.front());
+            if(!firstOp || firstOp.getNumOperands() != 2 || firstOp.getOperand(0) != block.getArgument(1) || firstOp.getOperand(1) != block.getArgument(0))
             {
                 return false;
             }
 
-            auto secondOp = dyn_cast_if_present<linalg::YieldOp>(block.end());
+            auto secondOp = dyn_cast_if_present<linalg::YieldOp>(&block.back());
             if(!secondOp || secondOp.getNumOperands() != 1 || secondOp.getOperand(0) != firstOp.getResult())
             {
                 return false;
