@@ -3746,12 +3746,10 @@ namespace attention_fusion
             {
                 if(!op)
                 {
-                    op = op->getNextNode();
-                }
-                else
-                {
                     break;
                 }
+                
+                op = op->getNextNode();
                 
             }
 
