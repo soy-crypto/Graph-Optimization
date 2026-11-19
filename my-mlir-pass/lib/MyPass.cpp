@@ -3735,7 +3735,7 @@ namespace attention_fusion
         Value getAllocationOp(Block& block, unsigned index) const 
         {
             //validity
-            if(block.empty() || index < 0)
+            if(block.empty())
             {
                 return {};
             }
@@ -3744,7 +3744,15 @@ namespace attention_fusion
             Operation* op = &block.front();
             for(unsigned i = 0; i < index; i++)
             {
-                op = op->getNextNode();
+                if(!op)
+                {
+                    op = op->getNextNode();
+                }
+                else
+                {
+                    break;
+                }
+                
             }
 
             auto allocOp = dyn_cast_if_present<memref::AllocOp>(op);
