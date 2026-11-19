@@ -4007,6 +4007,9 @@ namespace attention_fusion
         bool validateOps(ExpSumOps ops, linalg::FillOp fillOp) const
         {
             if(!ops.expOp || !ops.rowSumOp || !fillOp)
+            {
+                return false;
+            }
 
             //return
             return checkExpOp(ops.expOp) && checkRowsumOp(ops.rowSumOp) && checkFillOp(fillOp);
