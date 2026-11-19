@@ -3646,8 +3646,9 @@ namespace attention_fusion
 
             //checking
             /** type checking */
-            auto expectedType = MemRefType::get({64, 64}, Float32Type::get(op.getContext())); 
-            if(alloc2.getType() != expectedType || alloc3.getType() != expectedType || alloc4.getType() != expectedType)
+            auto expected2DType = MemRefType::get({64, 64}, Float32Type::get(op.getContext())); 
+            auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext())); 
+            if(alloc2.getType() != expected2DType || alloc3.getType() != expected1DType || alloc4.getType() != expected2DType)
             {
                 return false;
             }
