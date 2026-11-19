@@ -3587,8 +3587,8 @@ namespace attention_fusion
                 return ExpSumOps{};
             }
 
-            auto expOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
-            auto rowSumOp = dyn_cast_if_present<linalg::GenericOp>(op->getNextNode());
+            auto expOp = llvm::dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
+            auto rowSumOp = llvm::dyn_cast_if_present<linalg::GenericOp>(op->getNextNode());
             if(!expOp || !rowSumOp)
             {
                 return {};
@@ -3656,7 +3656,7 @@ namespace attention_fusion
             }
 
             /** value checking */
-            auto prevOp = dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
+            auto prevOp = llvm::dyn_cast_if_present<linalg::GenericOp>(op->getPrevNode());
             if(!prevOp || alloc3 != prevOp.getDpsInits()[0] )
             {
                 return false;
@@ -3711,19 +3711,19 @@ namespace attention_fusion
                 ops.push_back(&op);
             }
 
-            auto firstOp = dyn_cast_if_present<arith::SubFOp>(ops[0]);
+            auto firstOp = llvm::dyn_cast_if_present<arith::SubFOp>(ops[0]);
             if(!firstOp || firstOp.getNumOperands() != 2 || !firstOp.getResult().getType().isF32() || firstOp.getOperand(0) != block.getArgument(0) || firstOp.getOperand(1) != block.getArgument(1))
             {
                 return false;
             }
 
-            auto secondOp = dyn_cast_if_present<math::ExpOp>(ops[1]);
+            auto secondOp = llvm::dyn_cast_if_present<math::ExpOp>(ops[1]);
             if(!secondOp || secondOp->getNumOperands() != 1 || !secondOp.getResult().getType().isF32() || secondOp.getOperand() != firstOp.getResult())
             {
                 return false;
             }
 
-            auto lastOp = dyn_cast_if_present<linalg::YieldOp>(ops[2]);
+            auto lastOp = llvm::dyn_cast_if_present<linalg::YieldOp>(ops[2]);
             if(!lastOp || lastOp.getNumOperands() != 1 || lastOp.getOperand(0) != secondOp.getResult())
             {
                 return false;
@@ -3753,7 +3753,7 @@ namespace attention_fusion
                 
             }
 
-            auto allocOp = dyn_cast_if_present<memref::AllocOp>(op);
+            auto allocOp = llvm::dyn_cast_if_present<memref::AllocOp>(op);
             if(!allocOp)
             {
                 return {};
@@ -3818,13 +3818,13 @@ namespace attention_fusion
                 return {};
             }
 
-            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
+            auto fillOp = llvm::dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
             if(!fillOp)
             {
                 return {};
             }
 
-            auto expOp = dyn_cast_if_present<linalg::GenericOp>(fillOp->getPrevNode());
+            auto expOp = llvm::dyn_cast_if_present<linalg::GenericOp>(fillOp->getPrevNode());
             if(!expOp || expOp.getNumDpsInits() != 1)
             {
                 return {};
@@ -3840,7 +3840,7 @@ namespace attention_fusion
                 return {};
             }
 
-            auto fillOp = dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
+            auto fillOp = llvm::dyn_cast_if_present<linalg::FillOp>(op->getPrevNode());
             if(!fillOp || fillOp.getNumDpsInits() != 1)
             {
                 return {};
@@ -3915,67 +3915,6 @@ namespace attention_fusion
         }
 
         /** validate fillOp */
-        Value getConstantOp(func::FuncOp op, unsigned index) const
-        {
-            if(!op || op.getBody().empty())
-            {
-                return {};
-            }
-            
-            Block& block = op.getBody().front();
-            if(block.empty())
-            {
-                return {};
-            }
-
-            auto* curOp = &block.front();
-            for(unsigned i = 0; i < index; i++)
-            {
-                if(curOp)
-                {
-                    curOp = curOp->getNextNode();   
-                }
-            }
-
-            if(!curOp || !isa<arith::ConstantOp>(curOp))
-            {
-                return {};
-            }
-
-            return curOp->getResult(0);
-        }
-        
-        Value getAllocationOp(func::FuncOp op, unsigned index) const
-        {
-            if(!op || op.getBody().empty())
-            {
-                return {};
-            }
-
-            Block& block = op.getBody().front();
-            if(block.empty())
-            {
-                return {};
-            }
-
-            auto* curOp = &block.front();
-            for(unsigned i = 0; i < index; i++)
-            {
-                if(curOp)
-                {
-                    curOp = curOp->getNextNode();  
-                }
- 
-            }
-
-            if(!curOp || !isa<memref::AllocOp>(curOp))
-            {
-                return {};
-            }
-
-            return curOp->getResult(0);
-        }
-
         bool checkFillOp(linalg::FillOp op) const
         {
             //validity
@@ -3993,16 +3932,14 @@ namespace attention_fusion
 
             //checking
             Value input = op.getDpsInputs()[0];
-            Value expectedInput = getConstantOp(attentionOp, 6);
-            if(!input.getType().isF32() || input != expectedInput)
+            if(!input.getType().isF32() || !matchPattern(input, m_PosZeroFloat))
             {
                 return false;
             }
 
             Value output = op.getDpsInits()[0];
             auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
-            Value expectedOutput = getAllocationOp(attentionOp, 11);
-            if(output.getType() != expected1DType || output != expectedOutput)
+            if(output.getType() != expected1DType || !llvm::isa_and_nonnull<memref::AllocOp>(input))
             {
                 return false;
             }
@@ -4032,7 +3969,7 @@ namespace attention_fusion
                 return {};
             }
 
-            auto yieldOp = dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
+            auto yieldOp = llvm::dyn_cast_if_present<linalg::YieldOp>(block.getTerminator());
             if(!yieldOp || yieldOp.getNumOperands() != 1)
             {
                 return {};
