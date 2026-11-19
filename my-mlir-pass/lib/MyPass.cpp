@@ -3875,7 +3875,13 @@ namespace attention_fusion
         
         bool checkRowsumBlockHead(Block& block) const
         {
-            
+            //validity
+            if(block.empty())
+            {
+                return false;
+            }
+
+            //
             return true;
         }
         
