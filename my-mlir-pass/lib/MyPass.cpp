@@ -37,6 +37,8 @@
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/IRMapping.h"
+#include "llvm/Support/Casting.h"       // llvm::isa_and_nonnull
+#include "mlir/Dialect/MemRef/IR/MemRef.h" // mlir::memref::AllocOp
 
 using namespace mlir;
 
@@ -3672,7 +3674,7 @@ namespace attention_fusion
                 return false;
             }
             
-            if(!isa<memref::AllocOp>(alloc2.getDefiningOp()) || !isa<memref::AllocOp>(alloc4.getDefiningOp()))
+            if(!llvm::isa_and_nonnull<memref::AllocOp>(alloc2.getDefiningOp()) || !llvm::isa_and_nonnull<memref::AllocOp>(alloc4.getDefiningOp()))
             {
                 return false;
             }
