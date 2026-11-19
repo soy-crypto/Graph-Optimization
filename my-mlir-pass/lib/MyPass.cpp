@@ -3747,7 +3747,7 @@ namespace attention_fusion
                 op = op->getNextNode();
             }
 
-            auto allocOp = dyn_cast_if_present<memref::AllocaOp>(op);
+            auto allocOp = dyn_cast_if_present<memref::AllocOp>(op);
             if(!allocOp)
             {
                 return {};
