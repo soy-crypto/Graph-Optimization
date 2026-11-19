@@ -3672,9 +3672,7 @@ namespace attention_fusion
                 return false;
             }
             
-            auto expectedAlloc2 = getAllocationOp(block, 8);
-            auto expectedAlloc4 = getAllocationOp(block, 10);
-            if(alloc2 != expectedAlloc2 || alloc4 != expectedAlloc4)
+            if(!isa<memref::AllocOp>(alloc2.getDefiningOp()) || !isa<memref::AllocOp>(alloc4.getDefiningOp()))
             {
                 return false;
             }
