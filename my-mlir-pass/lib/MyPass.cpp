@@ -3731,37 +3731,6 @@ namespace attention_fusion
 
             return true;
         }
-        
-        Value getAllocationOp(Block& block, unsigned index) const 
-        {
-            //validity
-            if(block.empty())
-            {
-                return {};
-            }
-            
-            //get allocation op
-            Operation* op = &block.front();
-            for(unsigned i = 0; i < index; i++)
-            {
-                if(!op)
-                {
-                    break;
-                }
-                
-                op = op->getNextNode();
-                
-            }
-
-            auto allocOp = llvm::dyn_cast_if_present<memref::AllocOp>(op);
-            if(!allocOp)
-            {
-                return {};
-            }
-
-            //return
-            return allocOp.getResult();
-        }
 
         bool checkExpOp(linalg::GenericOp expOp) const
         {
