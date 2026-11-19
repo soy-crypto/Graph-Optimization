@@ -3881,6 +3881,23 @@ namespace attention_fusion
         
         bool checkRowsumBlockBody(Block& block) const
         {
+            if(!block.empty() && std::distance(block.begin(), block.end()) != 2)
+            {
+                return false;
+            }
+
+            auto firstOp = dyn_cast_if_present<arith::AddFOp>(block.begin());
+            if(!firstOp || firstOp.getNumOperands() != 2 || firstOp.getOperand(0) != block.getArgument(0) || firstOp.getOperand(1) != block.getArgument(1))
+            {
+                return false;
+            }
+
+            auto secondOp = dyn_cast_if_present<linalg::YieldOp>(block.end());
+            if(!secondOp || secondOp.getNumOperands() != 1 || secondOp.getOperand(0) != firstOp.getResult())
+            {
+                return false;
+            }            
+            
             return true;
         }
 
