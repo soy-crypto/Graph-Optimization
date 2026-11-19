@@ -3901,14 +3901,14 @@ namespace attention_fusion
 
             //checking
             Value input = op.getDpsInputs()[0];
-            if(!input.getType().isF32() || !matchPattern(input, m_PosZeroFloat))
+            if(!input.getType().isF32() || !matchPattern(input, m_PosZeroFloat()))
             {
                 return false;
             }
 
             Value output = op.getDpsInits()[0];
             auto expected1DType = MemRefType::get({64}, Float32Type::get(op.getContext()));
-            if(output.getType() != expected1DType || !llvm::isa_and_nonnull<memref::AllocOp>(input))
+            if(output.getType() != expected1DType || !llvm::isa_and_nonnull<memref::AllocOp>(output))
             {
                 return false;
             }
