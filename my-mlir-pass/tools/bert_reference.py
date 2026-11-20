@@ -41,3 +41,5 @@ path = Path("build/bert-tiny-reference.npz")
 np.savez(path, **reference)
 
 #read
+with np.load(path) as saved:
+    print("saved output shape:", saved["last_hidden_state"].shape)
