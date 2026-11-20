@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "/workspaces/loop/my-mlir-pass",
+    "cmake.sourceDirectory": "/root/loop/my-mlir-pass",
     "workbench.editorLargeFileConfirmation": 16,
     "editor.fontSize": 15
 }
