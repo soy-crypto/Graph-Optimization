@@ -47,17 +47,19 @@ print("Recomputed layer0.output.dense output matches the captured output.")
 
 #save
 ffn_first_module = layer0.intermediate.dense
-ffn_last_module   = layer0.output.dense
+ffn_last_module  = layer0.output.dense
 path = Path("build/bert-tiny-layer0-ffn.npz")
 np.savez(path,
          X=captured["intermediate_dense_input"].numpy(),
          W1=ffn_first_module.weight.detach().numpy(),
-         bias1=ffn_first_module.bias.deatch().numpy(),
+         bias1=ffn_first_module.bias.detach().numpy(),
          W2=ffn_last_module.weight.detach().numpy(),
          bias2=ffn_last_module.bias.detach().numpy(),
-         Y=captured["output_dense_output"]
+         Y=captured["output_dense_output"].numpy()
 )
 
 with np.load(path) as saved:
     for name in saved.files:
         print(name, saved[name].shape)
+        
+#print computation graph
