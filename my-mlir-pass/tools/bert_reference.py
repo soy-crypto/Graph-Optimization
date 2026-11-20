@@ -5,7 +5,9 @@ from transformers import AutoTokenizer
 from transformers.models.bert.modeling_bert import BertModel, BertLayer
 
 import torch
+import 
 import numpy as np
+
 
 #init
 model_name = "google/bert_uncased_L-2_H-128_A-2"
@@ -62,4 +64,10 @@ with np.load(path) as saved:
     for name in saved.files:
         print(name, saved[name].shape)
         
-#computation graph
+#ffn computation graph
+ffn = torch.nn.Sequential(layer0.intermediate, layer0.output.dense).eval()
+with np.load(path) as saved:
+    X = torch.from_numpy(saved["X"])
+
+computation_graph = torch.export.export(ffn, (X,))
+print(computation_graph.graph_module.code)
