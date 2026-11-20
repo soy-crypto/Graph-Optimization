@@ -25,11 +25,21 @@ print("Input name:", list(inputs))
 print("Input shaep:", inputs["input_ids"].shape)
 print("Active tokens:", inputs["attention_mask"].sum().item())
 
+#
+captured = {}
+def capture_input():
+    captured["ffn_input"] = args[0]
+
+handle = layer.intermediate.dense.register_forward_pre_hook(capture_input)
+
 #inference
 with torch.inference_mode():
     output = model(**inputs)
 
 print("Output shape:", output.last_hidden_state.shape)
+handle.remove()
+print("First FFN input:", captured["ffn_input"].shape)
+print("Output shape:", output.lat_hidden_state.shape)
 
 #save inputs and output
 reference = {}
