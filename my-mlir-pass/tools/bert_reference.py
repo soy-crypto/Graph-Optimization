@@ -6,16 +6,20 @@ import numpy as np
 
 #init
 model_name = "google/bert_uncased_L-2_H-128_A-2"
-model = AutoModel.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model      = AutoModel.from_pretrained(model_name)
+tokenizer  = AutoTokenizer.from_pretrained(model_name)
 model.eval()
 
 print(type(model).__name__)
 print("Hidden size:", model.config.hidden_size)
 print("Intermeidate size:", model.config.intermediate_size)
 
-#inpect the first encoder block's feed-forward network
+#inspect the first encoder block's feed-forward network
 layer = model.encoder.layer[0]
+print(layer)
+for name, module in layer.named_modules():
+    print(name, type(module).__name__)
+    
 print("First linear layer:", layer.intermediate.dense)
 print("Second linear layer:", layer.output.dense)
 
@@ -25,9 +29,9 @@ print("Input name:", list(inputs))
 print("Input shaep:", inputs["input_ids"].shape)
 print("Active tokens:", inputs["attention_mask"].sum().item())
 
-#
+#caputer intermediate results
 captured = {}
-def capture_input():
+def capture_input(module, args):
     captured["ffn_input"] = args[0]
 
 handle = layer.intermediate.dense.register_forward_pre_hook(capture_input)
@@ -36,7 +40,6 @@ handle = layer.intermediate.dense.register_forward_pre_hook(capture_input)
 with torch.inference_mode():
     output = model(**inputs)
 
-print("Output shape:", output.last_hidden_state.shape)
 handle.remove()
 print("First FFN input:", captured["ffn_input"].shape)
 print("Output shape:", output.lat_hidden_state.shape)
@@ -46,7 +49,9 @@ reference = {}
 for name, tensor in inputs.items():
     reference[name] = tensor.numpy()
 
+reference["ffn_input"]         = captured["ffn_input"].numpy()
 reference["last_hidden_state"] = output.last_hidden_state.numpy()
+
 path = Path("build/bert-tiny-reference.npz")
 np.savez(path, **reference)
 
