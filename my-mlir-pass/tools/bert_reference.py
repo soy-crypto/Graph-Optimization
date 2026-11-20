@@ -19,10 +19,10 @@ captured = {}
 
 #register hooks
 def capture_x(module, args, result):
-    captured["ffn_input"] = args[0]
+    captured["intermediate_dense_input"] = args[0]
 
 def capture_h(module, args, result):
-    captured["ffn_output"] = result
+    captured["output_dense_output"] = result
 
 input_hook  = layer0.intermediate.dense.register_forward_hook(capture_x)
 output_hook = layer0.output.dense.register_forward_hook(capture_h)
@@ -35,8 +35,12 @@ with torch.inference_mode():
 input_hook.remove()
 output_hook.remove()
 
-print("FFN input: ", captured["ffn_input"].shape)
-print("FFN output:", captured["ffn_output"].shape)
+#validate
+print("FFN input: ", captured["intermediate_dense_input"].shape)
+print("FFN output:", captured["output_dense_output"].shape)
+with torch.inference_mode():
+    intermediate_output = layer0.intermediate(captured["intermediate_dense_input"])
+    output_dense_output = layer0.output.dense(intermediate_output)
 
-#
-layer0.output.
+torch.testing.assert_close(output_dense_output, captured["output_dense_output"])
+print("match!")
