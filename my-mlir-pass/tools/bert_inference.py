@@ -1,1 +1,5 @@
-#bert inference
+from transformers import AutoModel
+
+
+model = AutoModel.from_pretrained("google/bert_uncased_L-2_H-128_A-2")
+model.eval()
