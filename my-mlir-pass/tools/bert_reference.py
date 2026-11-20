@@ -1,19 +1,20 @@
 from pathlib import Path
+from typing import cast
 
-from transformers import AutoModel, AutoTokenizer
-from transformers.models.bert.modeling_bert import BertModel
+from transformers import AutoTokenizer
+from transformers.models.bert.modeling_bert import BertModel, BertLayer
+
 import torch
 import numpy as np
 
 #init
 model_name = "google/bert_uncased_L-2_H-128_A-2"
 model      = BertModel.from_pretrained(model_name)
-assert isinstance(model, BertModel)
 tokenizer  = AutoTokenizer.from_pretrained(model_name)
 model.eval()
 
-print("layer0", model.encoder.layer[0])
-
+#capture
+layer0 = cast(BertLayer, model.encoder.layer[0])
 
 '''
 #
@@ -69,4 +70,3 @@ for name, module in layer0.named_modules():
 print("First linear layer:", layer0.intermediate.dense)
 print("Second linear layer:", layer0.output.dense)
 '''
-
