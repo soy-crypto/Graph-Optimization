@@ -24,7 +24,7 @@ def capture_x(module, args, result):
 def capture_h(module, args, result):
     captured["ffn_output"] = result
 
-input_hook = layer0.intermediate.dense.register_forward_hook(capture_x)
+input_hook  = layer0.intermediate.dense.register_forward_hook(capture_x)
 output_hook = layer0.output.dense.register_forward_hook(capture_h)
 
 #capture
@@ -37,3 +37,6 @@ output_hook.remove()
 
 print("FFN input: ", captured["ffn_input"].shape)
 print("FFN output:", captured["ffn_output"].shape)
+
+#
+layer0.output.
