@@ -62,4 +62,4 @@ with np.load(path) as saved:
     for name in saved.files:
         print(name, saved[name].shape)
         
-#print computation graph
+#computation graph
