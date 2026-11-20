@@ -15,7 +15,8 @@ print("Hidden size:", model.config.hidden_size)
 print("Intermeidate size:", model.config.intermediate_size)
 
 #inspect the first encoder block's feed-forward network
-layer = model.encoder.layer[0]
+selfAttentionlayer = model.encoder.layer[0]
+
 print(layer)
 for name, module in layer.named_modules():
     print(name, type(module).__name__)
