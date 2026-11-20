@@ -18,14 +18,14 @@ layer0 = cast(BertLayer, model.encoder.layer[0])
 captured = {}
 
 #register hooks
-def capture_x(module, args, result):
+def capture_ffn_input(module, args, result):
     captured["intermediate_dense_input"] = args[0]
 
-def capture_h(module, args, result):
+def capture_ffn_output(module, args, result):
     captured["output_dense_output"] = result
 
-input_hook  = layer0.intermediate.dense.register_forward_hook(capture_x)
-output_hook = layer0.output.dense.register_forward_hook(capture_h)
+input_hook  = layer0.intermediate.dense.register_forward_hook(capture_ffn_input)
+output_hook = layer0.output.dense.register_forward_hook(capture_ffn_output)
 
 #capture
 with torch.inference_mode():
@@ -43,4 +43,21 @@ with torch.inference_mode():
     output_dense_output = layer0.output.dense(intermediate_output)
 
 torch.testing.assert_close(output_dense_output, captured["output_dense_output"])
-print("match!")
+print("Recomputed layer0.output.dense output matches the captured output.")
+
+#save
+ffn_first_module = layer0.intermediate.dense
+ffn_last_modue   = layer0.output.dense
+path = Path("build/bert-tiny-layer0-ffn.npz")
+np.savez(path,
+         X=captured["intermediate_dense_input"].numpy(),
+         W1=ffn_first_module.weight.detach().numpy(),
+         bias1=ffn_first_module.bias.deatch().numpy(),
+         W2=ffn_last_module.weight.detach().numpy(),
+         bias2=ffn_last_module.bias.detach().numpy(),
+         Y=captured["output_dense_output"]
+)
+
+with np.load(path) as saved:
+    for name in saved.files:
+        print(name, saved[name].shape)
