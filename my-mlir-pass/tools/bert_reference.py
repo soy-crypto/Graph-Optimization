@@ -47,7 +47,7 @@ print("Recomputed layer0.output.dense output matches the captured output.")
 
 #save
 ffn_first_module = layer0.intermediate.dense
-ffn_last_modue   = layer0.output.dense
+ffn_last_module   = layer0.output.dense
 path = Path("build/bert-tiny-layer0-ffn.npz")
 np.savez(path,
          X=captured["intermediate_dense_input"].numpy(),
