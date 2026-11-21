@@ -5,7 +5,6 @@ from transformers import AutoTokenizer
 from transformers.models.bert.modeling_bert import BertModel, BertLayer
 
 import torch
-import 
 import numpy as np
 
 
@@ -47,7 +46,7 @@ with torch.inference_mode():
 torch.testing.assert_close(output_dense_output, captured["output_dense_output"])
 print("Recomputed layer0.output.dense output matches the captured output.")
 
-#save
+#save x, weights, bias
 ffn_first_module = layer0.intermediate.dense
 ffn_last_module  = layer0.output.dense
 path = Path("build/bert-tiny-layer0-ffn.npz")
@@ -71,3 +70,14 @@ with np.load(path) as saved:
 
 computation_graph = torch.export.export(ffn, (X,))
 print(computation_graph.graph_module.code)
+
+#inference to check correctness
+with np.load(path) as saved, torch.inference_mode():
+    expectedY = torch.from_numpy(saved["Y"])
+    inferenceY = computation_graph.module()(X)
+    torch.testing.assert_close(inferenceY, expectedY)
+
+print("Exported FFN matches the captured layer0.output.dense output for this input.")
+
+#save ffn
+torch.export.save(computation_graph, "build/bert-tiny-layer0-ffn.pt2")
